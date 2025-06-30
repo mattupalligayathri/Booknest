@@ -1,16 +1,11 @@
 
-1.0.2 / 2015-10-07
+1.6.0 / 2015-01-11
 ==================
 
-  * use try/catch when checking `localStorage` (#3, @kumavis)
+  * feat: exports thenify
+  * support node 0.8+
 
-1.0.1 / 2014-11-25
+1.5.0 / 2015-01-09
 ==================
 
-  * browser: use `console.warn()` for deprecation calls
-  * browser: more jsdocs
-
-1.0.0 / 2014-04-30
-==================
-
-  * initial commit
+  * feat: support backward compatible with callback

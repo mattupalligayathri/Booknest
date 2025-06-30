@@ -1,8 +1,5 @@
 {
-	"root": true,
-
-	"extends": "@ljharb",
-
-	"rules": {
-	},
+  "rules": {
+    "no-console": "off"
+  }
 }
