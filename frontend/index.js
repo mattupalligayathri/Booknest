@@ -1,17 +1,39 @@
-export { Composer } from './compose/composer.js';
-export { Document } from './doc/Document.js';
-export { Schema } from './schema/Schema.js';
-export { YAMLError, YAMLParseError, YAMLWarning } from './errors.js';
-export { Alias } from './nodes/Alias.js';
-export { isAlias, isCollection, isDocument, isMap, isNode, isPair, isScalar, isSeq } from './nodes/identity.js';
-export { Pair } from './nodes/Pair.js';
-export { Scalar } from './nodes/Scalar.js';
-export { YAMLMap } from './nodes/YAMLMap.js';
-export { YAMLSeq } from './nodes/YAMLSeq.js';
-import * as cst from './parse/cst.js';
-export { cst as CST };
-export { Lexer } from './parse/lexer.js';
-export { LineCounter } from './parse/line-counter.js';
-export { Parser } from './parse/parser.js';
-export { parse, parseAllDocuments, parseDocument, stringify } from './public-api.js';
-export { visit, visitAsync } from './visit.js';
+'use strict';
+
+var whichBoxedPrimitive = require('which-boxed-primitive');
+var callBound = require('call-bind/callBound');
+var hasSymbols = require('has-symbols')();
+var hasBigInts = require('has-bigints')();
+
+var stringToString = callBound('String.prototype.toString');
+var numberValueOf = callBound('Number.prototype.valueOf');
+var booleanValueOf = callBound('Boolean.prototype.valueOf');
+var symbolValueOf = hasSymbols && callBound('Symbol.prototype.valueOf');
+var bigIntValueOf = hasBigInts && callBound('BigInt.prototype.valueOf');
+
+module.exports = function unboxPrimitive(value) {
+	var which = whichBoxedPrimitive(value);
+	if (typeof which !== 'string') {
+		throw new TypeError(which === null ? 'value is an unboxed primitive' : 'value is a non-boxed-primitive object');
+	}
+
+	if (which === 'String') {
+		return stringToString(value);
+	}
+	if (which === 'Number') {
+		return numberValueOf(value);
+	}
+	if (which === 'Boolean') {
+		return booleanValueOf(value);
+	}
+	if (which === 'Symbol') {
+		if (!hasSymbols) {
+			throw new EvalError('somehow this environment does not have Symbols, but you have a boxed Symbol value. Please report this!');
+		}
+		return symbolValueOf(value);
+	}
+	if (which === 'BigInt') {
+		return bigIntValueOf(value);
+	}
+	throw new RangeError('unknown boxed primitive found: ' + which);
+};
