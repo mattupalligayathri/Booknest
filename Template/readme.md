@@ -1,1 +1,0 @@
-template of the project
