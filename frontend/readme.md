@@ -1,139 +1,64 @@
-# quick-lru [![Build Status](https://travis-ci.org/sindresorhus/quick-lru.svg?branch=master)](https://travis-ci.org/sindresorhus/quick-lru) [![Coverage Status](https://coveralls.io/repos/github/sindresorhus/quick-lru/badge.svg?branch=master)](https://coveralls.io/github/sindresorhus/quick-lru?branch=master)
+# yocto-queue [![](https://badgen.net/bundlephobia/minzip/yocto-queue)](https://bundlephobia.com/result?p=yocto-queue)
 
-> Simple [“Least Recently Used” (LRU) cache](https://en.m.wikipedia.org/wiki/Cache_replacement_policies#Least_Recently_Used_.28LRU.29)
+> Tiny queue data structure
 
-Useful when you need to cache something and limit memory usage.
+You should use this package instead of an array if you do a lot of `Array#push()` and `Array#shift()` on large arrays, since `Array#shift()` has [linear time complexity](https://medium.com/@ariel.salem1989/an-easy-to-use-guide-to-big-o-time-complexity-5dcf4be8a444#:~:text=O(N)%E2%80%94Linear%20Time) *O(n)* while `Queue#dequeue()` has [constant time complexity](https://medium.com/@ariel.salem1989/an-easy-to-use-guide-to-big-o-time-complexity-5dcf4be8a444#:~:text=O(1)%20%E2%80%94%20Constant%20Time) *O(1)*. That makes a huge difference for large arrays.
 
-Inspired by the [`hashlru` algorithm](https://github.com/dominictarr/hashlru#algorithm), but instead uses [`Map`](https://developer.mozilla.org/en/docs/Web/JavaScript/Reference/Global_Objects/Map) to support keys of any type, not just strings, and values can be `undefined`.
+> A [queue](https://en.wikipedia.org/wiki/Queue_(abstract_data_type)) is an ordered list of elements where an element is inserted at the end of the queue and is removed from the front of the queue. A queue works based on the first-in, first-out ([FIFO](https://en.wikipedia.org/wiki/FIFO_(computing_and_electronics))) principle.
 
 ## Install
 
 ```
-$ npm install quick-lru
+$ npm install yocto-queue
 ```
 
 ## Usage
 
 ```js
-const QuickLRU = require('quick-lru');
+const Queue = require('yocto-queue');
 
-const lru = new QuickLRU({maxSize: 1000});
+const queue = new Queue();
 
-lru.set('🦄', '🌈');
+queue.enqueue('🦄');
+queue.enqueue('🌈');
 
-lru.has('🦄');
-//=> true
+console.log(queue.size);
+//=> 2
 
-lru.get('🦄');
+console.log(...queue);
+//=> '🦄 🌈'
+
+console.log(queue.dequeue());
+//=> '🦄'
+
+console.log(queue.dequeue());
 //=> '🌈'
 ```
 
 ## API
 
-### new QuickLRU(options?)
+### `queue = new Queue()`
 
-Returns a new instance.
+The instance is an [`Iterable`](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Iteration_protocols), which means you can iterate over the queue front to back with a “for…of” loop, or use spreading to convert the queue to an array. Don't do this unless you really need to though, since it's slow.
 
-### options
+#### `.enqueue(value)`
 
-Type: `object`
+Add a value to the queue.
 
-#### maxSize
+#### `.dequeue()`
 
-*Required*\
-Type: `number`
+Remove the next value in the queue.
 
-The maximum number of items before evicting the least recently used items.
+Returns the removed value or `undefined` if the queue is empty.
 
-#### maxAge
+#### `.clear()`
 
-Type: `number`\
-Default: `Infinity`
+Clear the queue.
 
-The maximum number of milliseconds an item should remain in cache.
-By default maxAge will be Infinity, which means that items will never expire.
+#### `.size`
 
-Lazy expiration happens upon the next `write` or `read` call.
+The size of the queue.
 
-Individual expiration of an item can be specified by the `set(key, value, options)` method.
+## Related
 
-#### onEviction
-
-*Optional*\
-Type: `(key, value) => void`
-
-Called right before an item is evicted from the cache.
-
-Useful for side effects or for items like object URLs that need explicit cleanup (`revokeObjectURL`).
-
-### Instance
-
-The instance is [`iterable`](https://developer.mozilla.org/en/docs/Web/JavaScript/Reference/Iteration_protocols) so you can use it directly in a [`for…of`](https://developer.mozilla.org/en/docs/Web/JavaScript/Reference/Statements/for...of) loop.
-
-Both `key` and `value` can be of any type.
-
-#### .set(key, value, options?)
-
-Set an item. Returns the instance.
-
-Individual expiration of an item can be specified with the `maxAge` option. If not specified, the global `maxAge` value will be used in case it is specified on the constructor, otherwise the item will never expire.
-
-#### .get(key)
-
-Get an item.
-
-#### .has(key)
-
-Check if an item exists.
-
-#### .peek(key)
-
-Get an item without marking it as recently used.
-
-#### .delete(key)
-
-Delete an item.
-
-Returns `true` if the item is removed or `false` if the item doesn't exist.
-
-#### .clear()
-
-Delete all items.
-
-#### .resize(maxSize)
-
-Update the `maxSize`, discarding items as necessary. Insertion order is mostly preserved, though this is not a strong guarantee.
-
-Useful for on-the-fly tuning of cache sizes in live systems.
-
-#### .keys()
-
-Iterable for all the keys.
-
-#### .values()
-
-Iterable for all the values.
-
-#### .entriesAscending()
-
-Iterable for all entries, starting with the oldest (ascending in recency).
-
-#### .entriesDescending()
-
-Iterable for all entries, starting with the newest (descending in recency).
-
-#### .size
-
-The stored item count.
-
----
-
-<div align="center">
-	<b>
-		<a href="https://tidelift.com/subscription/pkg/npm-quick-lru?utm_source=npm-quick-lru&utm_medium=referral&utm_campaign=readme">Get professional support for this package with a Tidelift subscription</a>
-	</b>
-	<br>
-	<sub>
-		Tidelift helps make open source sustainable for maintainers while giving companies<br>assurances about security, maintenance, and licensing for their dependencies.
-	</sub>
-</div>
+- [quick-lru](https://github.com/sindresorhus/quick-lru) - Simple “Least Recently Used” (LRU) cache

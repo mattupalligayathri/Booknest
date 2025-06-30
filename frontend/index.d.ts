@@ -1,128 +1,56 @@
-declare namespace QuickLRU {
-	interface Options<KeyType, ValueType> {
-		/**
-		The maximum number of milliseconds an item should remain in the cache.
-
-		@default Infinity
-
-		By default, `maxAge` will be `Infinity`, which means that items will never expire.
-		Lazy expiration upon the next write or read call.
-
-		Individual expiration of an item can be specified by the `set(key, value, maxAge)` method.
-		*/
-		readonly maxAge?: number;
-
-		/**
-		The maximum number of items before evicting the least recently used items.
-		*/
-		readonly maxSize: number;
-
-		/**
-		Called right before an item is evicted from the cache.
-
-		Useful for side effects or for items like object URLs that need explicit cleanup (`revokeObjectURL`).
-		*/
-		onEviction?: (key: KeyType, value: ValueType) => void;
-	}
-}
-
-declare class QuickLRU<KeyType, ValueType>
-	implements Iterable<[KeyType, ValueType]> {
+declare class Queue<ValueType> implements Iterable<ValueType> {
 	/**
-	The stored item count.
+	The size of the queue.
 	*/
 	readonly size: number;
 
 	/**
-	Simple ["Least Recently Used" (LRU) cache](https://en.m.wikipedia.org/wiki/Cache_replacement_policies#Least_Recently_Used_.28LRU.29).
+	Tiny queue data structure.
 
-	The instance is [`iterable`](https://developer.mozilla.org/en/docs/Web/JavaScript/Reference/Iteration_protocols) so you can use it directly in a [`for…of`](https://developer.mozilla.org/en/docs/Web/JavaScript/Reference/Statements/for...of) loop.
+	The instance is an [`Iterable`](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Iteration_protocols), which means you can iterate over the queue front to back with a “for…of” loop, or use spreading to convert the queue to an array. Don't do this unless you really need to though, since it's slow.
 
 	@example
 	```
-	import QuickLRU = require('quick-lru');
+	import Queue = require('yocto-queue');
 
-	const lru = new QuickLRU({maxSize: 1000});
+	const queue = new Queue();
 
-	lru.set('🦄', '🌈');
+	queue.enqueue('🦄');
+	queue.enqueue('🌈');
 
-	lru.has('🦄');
-	//=> true
+	console.log(queue.size);
+	//=> 2
 
-	lru.get('🦄');
+	console.log(...queue);
+	//=> '🦄 🌈'
+
+	console.log(queue.dequeue());
+	//=> '🦄'
+
+	console.log(queue.dequeue());
 	//=> '🌈'
 	```
 	*/
-	constructor(options: QuickLRU.Options<KeyType, ValueType>);
+	constructor();
 
-	[Symbol.iterator](): IterableIterator<[KeyType, ValueType]>;
+	[Symbol.iterator](): IterableIterator<ValueType>;
 
 	/**
-	Set an item. Returns the instance.
-
-	Individual expiration of an item can be specified with the `maxAge` option. If not specified, the global `maxAge` value will be used in case it is specified in the constructor, otherwise the item will never expire.
-
-	@returns The list instance.
+	Add a value to the queue.
 	*/
-	set(key: KeyType, value: ValueType, options?: {maxAge?: number}): this;
+	enqueue(value: ValueType): void;
 
 	/**
-	Get an item.
+	Remove the next value in the queue.
 
-	@returns The stored item or `undefined`.
+	@returns The removed value or `undefined` if the queue is empty.
 	*/
-	get(key: KeyType): ValueType | undefined;
+	dequeue(): ValueType | undefined;
 
 	/**
-	Check if an item exists.
-	*/
-	has(key: KeyType): boolean;
-
-	/**
-	Get an item without marking it as recently used.
-
-	@returns The stored item or `undefined`.
-	*/
-	peek(key: KeyType): ValueType | undefined;
-
-	/**
-	Delete an item.
-
-	@returns `true` if the item is removed or `false` if the item doesn't exist.
-	*/
-	delete(key: KeyType): boolean;
-
-	/**
-	Delete all items.
+	Clear the queue.
 	*/
 	clear(): void;
-
-	/**
-	Update the `maxSize` in-place, discarding items as necessary. Insertion order is mostly preserved, though this is not a strong guarantee.
-
-	Useful for on-the-fly tuning of cache sizes in live systems.
-	*/
-	resize(maxSize: number): void;
-
-	/**
-	Iterable for all the keys.
-	*/
-	keys(): IterableIterator<KeyType>;
-
-	/**
-	Iterable for all the values.
-	*/
-	values(): IterableIterator<ValueType>;
-
-	/**
-	Iterable for all entries, starting with the oldest (ascending in recency).
-	*/
-	entriesAscending(): IterableIterator<[KeyType, ValueType]>;
-
-	/**
-	Iterable for all entries, starting with the newest (descending in recency).
-	*/
-	entriesDescending(): IterableIterator<[KeyType, ValueType]>;
 }
 
-export = QuickLRU;
+export = Queue;
