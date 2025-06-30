@@ -3,155 +3,79 @@
 Object.defineProperty(exports, "__esModule", {
   value: true
 });
-exports.codeFrameColumns = codeFrameColumns;
-exports.default = _default;
-var _highlight = require("@babel/highlight");
-var _chalk = _interopRequireWildcard(require("chalk"), true);
-function _getRequireWildcardCache(nodeInterop) { if (typeof WeakMap !== "function") return null; var cacheBabelInterop = new WeakMap(); var cacheNodeInterop = new WeakMap(); return (_getRequireWildcardCache = function (nodeInterop) { return nodeInterop ? cacheNodeInterop : cacheBabelInterop; })(nodeInterop); }
-function _interopRequireWildcard(obj, nodeInterop) { if (!nodeInterop && obj && obj.__esModule) { return obj; } if (obj === null || typeof obj !== "object" && typeof obj !== "function") { return { default: obj }; } var cache = _getRequireWildcardCache(nodeInterop); if (cache && cache.has(obj)) { return cache.get(obj); } var newObj = {}; var hasPropertyDescriptor = Object.defineProperty && Object.getOwnPropertyDescriptor; for (var key in obj) { if (key !== "default" && Object.prototype.hasOwnProperty.call(obj, key)) { var desc = hasPropertyDescriptor ? Object.getOwnPropertyDescriptor(obj, key) : null; if (desc && (desc.get || desc.set)) { Object.defineProperty(newObj, key, desc); } else { newObj[key] = obj[key]; } } } newObj.default = obj; if (cache) { cache.set(obj, newObj); } return newObj; }
-let chalkWithForcedColor = undefined;
-function getChalk(forceColor) {
-  if (forceColor) {
-    var _chalkWithForcedColor;
-    (_chalkWithForcedColor = chalkWithForcedColor) != null ? _chalkWithForcedColor : chalkWithForcedColor = new _chalk.default.constructor({
-      enabled: true,
-      level: 1
-    });
-    return chalkWithForcedColor;
+exports.declare = declare;
+exports.declarePreset = void 0;
+const apiPolyfills = {
+  assertVersion: api => range => {
+    throwVersionError(range, api.version);
   }
-  return _chalk.default;
+};
+{
+  Object.assign(apiPolyfills, {
+    targets: () => () => {
+      return {};
+    },
+    assumption: () => () => {
+      return undefined;
+    }
+  });
 }
-let deprecationWarningShown = false;
-function getDefs(chalk) {
-  return {
-    gutter: chalk.grey,
-    marker: chalk.red.bold,
-    message: chalk.red.bold
+function declare(builder) {
+  return (api, options, dirname) => {
+    var _clonedApi2;
+    let clonedApi;
+    for (const name of Object.keys(apiPolyfills)) {
+      var _clonedApi;
+      if (api[name]) continue;
+      (_clonedApi = clonedApi) != null ? _clonedApi : clonedApi = copyApiObject(api);
+      clonedApi[name] = apiPolyfills[name](clonedApi);
+    }
+    return builder((_clonedApi2 = clonedApi) != null ? _clonedApi2 : api, options || {}, dirname);
   };
 }
-const NEWLINE = /\r\n|[\n\r\u2028\u2029]/;
-function getMarkerLines(loc, source, opts) {
-  const startLoc = Object.assign({
-    column: 0,
-    line: -1
-  }, loc.start);
-  const endLoc = Object.assign({}, startLoc, loc.end);
-  const {
-    linesAbove = 2,
-    linesBelow = 3
-  } = opts || {};
-  const startLine = startLoc.line;
-  const startColumn = startLoc.column;
-  const endLine = endLoc.line;
-  const endColumn = endLoc.column;
-  let start = Math.max(startLine - (linesAbove + 1), 0);
-  let end = Math.min(source.length, endLine + linesBelow);
-  if (startLine === -1) {
-    start = 0;
-  }
-  if (endLine === -1) {
-    end = source.length;
-  }
-  const lineDiff = endLine - startLine;
-  const markerLines = {};
-  if (lineDiff) {
-    for (let i = 0; i <= lineDiff; i++) {
-      const lineNumber = i + startLine;
-      if (!startColumn) {
-        markerLines[lineNumber] = true;
-      } else if (i === 0) {
-        const sourceLength = source[lineNumber - 1].length;
-        markerLines[lineNumber] = [startColumn, sourceLength - startColumn + 1];
-      } else if (i === lineDiff) {
-        markerLines[lineNumber] = [0, endColumn];
-      } else {
-        const sourceLength = source[lineNumber - i].length;
-        markerLines[lineNumber] = [0, sourceLength];
-      }
+const declarePreset = declare;
+exports.declarePreset = declarePreset;
+function copyApiObject(api) {
+  let proto = null;
+  if (typeof api.version === "string" && /^7\./.test(api.version)) {
+    proto = Object.getPrototypeOf(api);
+    if (proto && (!has(proto, "version") || !has(proto, "transform") || !has(proto, "template") || !has(proto, "types"))) {
+      proto = null;
     }
+  }
+  return Object.assign({}, proto, api);
+}
+function has(obj, key) {
+  return Object.prototype.hasOwnProperty.call(obj, key);
+}
+function throwVersionError(range, version) {
+  if (typeof range === "number") {
+    if (!Number.isInteger(range)) {
+      throw new Error("Expected string or integer value.");
+    }
+    range = `^${range}.0.0-0`;
+  }
+  if (typeof range !== "string") {
+    throw new Error("Expected string or integer value.");
+  }
+  const limit = Error.stackTraceLimit;
+  if (typeof limit === "number" && limit < 25) {
+    Error.stackTraceLimit = 25;
+  }
+  let err;
+  if (version.slice(0, 2) === "7.") {
+    err = new Error(`Requires Babel "^7.0.0-beta.41", but was loaded with "${version}". ` + `You'll need to update your @babel/core version.`);
   } else {
-    if (startColumn === endColumn) {
-      if (startColumn) {
-        markerLines[startLine] = [startColumn, 0];
-      } else {
-        markerLines[startLine] = true;
-      }
-    } else {
-      markerLines[startLine] = [startColumn, endColumn - startColumn];
-    }
+    err = new Error(`Requires Babel "${range}", but was loaded with "${version}". ` + `If you are sure you have a compatible version of @babel/core, ` + `it is likely that something in your build process is loading the ` + `wrong version. Inspect the stack trace of this error to look for ` + `the first entry that doesn't mention "@babel/core" or "babel-core" ` + `to see what is calling Babel.`);
   }
-  return {
-    start,
-    end,
-    markerLines
-  };
-}
-function codeFrameColumns(rawLines, loc, opts = {}) {
-  const highlighted = (opts.highlightCode || opts.forceColor) && (0, _highlight.shouldHighlight)(opts);
-  const chalk = getChalk(opts.forceColor);
-  const defs = getDefs(chalk);
-  const maybeHighlight = (chalkFn, string) => {
-    return highlighted ? chalkFn(string) : string;
-  };
-  const lines = rawLines.split(NEWLINE);
-  const {
-    start,
-    end,
-    markerLines
-  } = getMarkerLines(loc, lines, opts);
-  const hasColumns = loc.start && typeof loc.start.column === "number";
-  const numberMaxWidth = String(end).length;
-  const highlightedLines = highlighted ? (0, _highlight.default)(rawLines, opts) : rawLines;
-  let frame = highlightedLines.split(NEWLINE, end).slice(start, end).map((line, index) => {
-    const number = start + 1 + index;
-    const paddedNumber = ` ${number}`.slice(-numberMaxWidth);
-    const gutter = ` ${paddedNumber} |`;
-    const hasMarker = markerLines[number];
-    const lastMarkerLine = !markerLines[number + 1];
-    if (hasMarker) {
-      let markerLine = "";
-      if (Array.isArray(hasMarker)) {
-        const markerSpacing = line.slice(0, Math.max(hasMarker[0] - 1, 0)).replace(/[^\t]/g, " ");
-        const numberOfMarkers = hasMarker[1] || 1;
-        markerLine = ["\n ", maybeHighlight(defs.gutter, gutter.replace(/\d/g, " ")), " ", markerSpacing, maybeHighlight(defs.marker, "^").repeat(numberOfMarkers)].join("");
-        if (lastMarkerLine && opts.message) {
-          markerLine += " " + maybeHighlight(defs.message, opts.message);
-        }
-      }
-      return [maybeHighlight(defs.marker, ">"), maybeHighlight(defs.gutter, gutter), line.length > 0 ? ` ${line}` : "", markerLine].join("");
-    } else {
-      return ` ${maybeHighlight(defs.gutter, gutter)}${line.length > 0 ? ` ${line}` : ""}`;
-    }
-  }).join("\n");
-  if (opts.message && !hasColumns) {
-    frame = `${" ".repeat(numberMaxWidth + 1)}${opts.message}\n${frame}`;
+  if (typeof limit === "number") {
+    Error.stackTraceLimit = limit;
   }
-  if (highlighted) {
-    return chalk.reset(frame);
-  } else {
-    return frame;
-  }
-}
-function _default(rawLines, lineNumber, colNumber, opts = {}) {
-  if (!deprecationWarningShown) {
-    deprecationWarningShown = true;
-    const message = "Passing lineNumber and colNumber is deprecated to @babel/code-frame. Please use `codeFrameColumns`.";
-    if (process.emitWarning) {
-      process.emitWarning(message, "DeprecationWarning");
-    } else {
-      const deprecationError = new Error(message);
-      deprecationError.name = "DeprecationWarning";
-      console.warn(new Error(message));
-    }
-  }
-  colNumber = Math.max(colNumber, 0);
-  const location = {
-    start: {
-      column: colNumber,
-      line: lineNumber
-    }
-  };
-  return codeFrameColumns(rawLines, location, opts);
+  throw Object.assign(err, {
+    code: "BABEL_VERSION_UNSUPPORTED",
+    version,
+    range
+  });
 }
 
 //# sourceMappingURL=index.js.map
