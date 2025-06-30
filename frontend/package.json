@@ -1,40 +1,47 @@
 {
-  "name": "update-browserslist-db",
-  "version": "1.0.13",
-  "description": "CLI tool to update caniuse-lite to refresh target browsers from Browserslist config",
-  "keywords": [
-    "caniuse",
-    "browsers",
-    "target"
-  ],
-  "funding": [
-    {
-      "type": "opencollective",
-      "url": "https://opencollective.com/browserslist"
+    "name": "tslib",
+    "author": "Microsoft Corp.",
+    "homepage": "https://www.typescriptlang.org/",
+    "version": "2.6.2",
+    "license": "0BSD",
+    "description": "Runtime library for TypeScript helper functions",
+    "keywords": [
+        "TypeScript",
+        "Microsoft",
+        "compiler",
+        "language",
+        "javascript",
+        "tslib",
+        "runtime"
+    ],
+    "bugs": {
+        "url": "https://github.com/Microsoft/TypeScript/issues"
     },
-    {
-      "type": "tidelift",
-      "url": "https://tidelift.com/funding/github/npm/browserslist"
+    "repository": {
+        "type": "git",
+        "url": "https://github.com/Microsoft/tslib.git"
     },
-    {
-      "type": "github",
-      "url": "https://github.com/sponsors/ai"
+    "main": "tslib.js",
+    "module": "tslib.es6.js",
+    "jsnext:main": "tslib.es6.js",
+    "typings": "tslib.d.ts",
+    "sideEffects": false,
+    "exports": {
+        ".": {
+            "module": {
+                "types": "./modules/index.d.ts",
+                "default": "./tslib.es6.mjs"
+            },
+            "import": {
+                "node": "./modules/index.js",
+                "default": {
+                    "types": "./modules/index.d.ts",
+                    "default": "./tslib.es6.mjs"
+                }
+            },
+            "default": "./tslib.js"
+        },
+        "./*": "./*",
+        "./": "./"
     }
-  ],
-  "author": "Andrey Sitnik <andrey@sitnik.ru>",
-  "license": "MIT",
-  "repository": "browserslist/update-db",
-  "types": "./index.d.ts",
-  "exports": {
-    ".": "./index.js",
-    "./package.json": "./package.json"
-  },
-  "dependencies": {
-    "escalade": "^3.1.1",
-    "picocolors": "^1.0.0"
-  },
-  "peerDependencies": {
-    "browserslist": ">= 4.21.0"
-  },
-  "bin": "cli.js"
 }
