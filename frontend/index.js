@@ -1,39 +1,50 @@
 'use strict';
 
-var whichBoxedPrimitive = require('which-boxed-primitive');
-var callBound = require('call-bind/callBound');
-var hasSymbols = require('has-symbols')();
-var hasBigInts = require('has-bigints')();
+var composer = require('./compose/composer.js');
+var Document = require('./doc/Document.js');
+var Schema = require('./schema/Schema.js');
+var errors = require('./errors.js');
+var Alias = require('./nodes/Alias.js');
+var identity = require('./nodes/identity.js');
+var Pair = require('./nodes/Pair.js');
+var Scalar = require('./nodes/Scalar.js');
+var YAMLMap = require('./nodes/YAMLMap.js');
+var YAMLSeq = require('./nodes/YAMLSeq.js');
+var cst = require('./parse/cst.js');
+var lexer = require('./parse/lexer.js');
+var lineCounter = require('./parse/line-counter.js');
+var parser = require('./parse/parser.js');
+var publicApi = require('./public-api.js');
+var visit = require('./visit.js');
 
-var stringToString = callBound('String.prototype.toString');
-var numberValueOf = callBound('Number.prototype.valueOf');
-var booleanValueOf = callBound('Boolean.prototype.valueOf');
-var symbolValueOf = hasSymbols && callBound('Symbol.prototype.valueOf');
-var bigIntValueOf = hasBigInts && callBound('BigInt.prototype.valueOf');
 
-module.exports = function unboxPrimitive(value) {
-	var which = whichBoxedPrimitive(value);
-	if (typeof which !== 'string') {
-		throw new TypeError(which === null ? 'value is an unboxed primitive' : 'value is a non-boxed-primitive object');
-	}
 
-	if (which === 'String') {
-		return stringToString(value);
-	}
-	if (which === 'Number') {
-		return numberValueOf(value);
-	}
-	if (which === 'Boolean') {
-		return booleanValueOf(value);
-	}
-	if (which === 'Symbol') {
-		if (!hasSymbols) {
-			throw new EvalError('somehow this environment does not have Symbols, but you have a boxed Symbol value. Please report this!');
-		}
-		return symbolValueOf(value);
-	}
-	if (which === 'BigInt') {
-		return bigIntValueOf(value);
-	}
-	throw new RangeError('unknown boxed primitive found: ' + which);
-};
+exports.Composer = composer.Composer;
+exports.Document = Document.Document;
+exports.Schema = Schema.Schema;
+exports.YAMLError = errors.YAMLError;
+exports.YAMLParseError = errors.YAMLParseError;
+exports.YAMLWarning = errors.YAMLWarning;
+exports.Alias = Alias.Alias;
+exports.isAlias = identity.isAlias;
+exports.isCollection = identity.isCollection;
+exports.isDocument = identity.isDocument;
+exports.isMap = identity.isMap;
+exports.isNode = identity.isNode;
+exports.isPair = identity.isPair;
+exports.isScalar = identity.isScalar;
+exports.isSeq = identity.isSeq;
+exports.Pair = Pair.Pair;
+exports.Scalar = Scalar.Scalar;
+exports.YAMLMap = YAMLMap.YAMLMap;
+exports.YAMLSeq = YAMLSeq.YAMLSeq;
+exports.CST = cst;
+exports.Lexer = lexer.Lexer;
+exports.LineCounter = lineCounter.LineCounter;
+exports.Parser = parser.Parser;
+exports.parse = publicApi.parse;
+exports.parseAllDocuments = publicApi.parseAllDocuments;
+exports.parseDocument = publicApi.parseDocument;
+exports.stringify = publicApi.stringify;
+exports.visit = visit.visit;
+exports.visitAsync = visit.visitAsync;

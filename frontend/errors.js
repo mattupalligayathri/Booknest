@@ -1,3 +1,5 @@
+'use strict';
+
 class YAMLError extends Error {
     constructor(name, pos, code, message) {
         super();
@@ -54,4 +56,7 @@ const prettifyError = (src, lc) => (error) => {
     }
 };
 
-export { YAMLError, YAMLParseError, YAMLWarning, prettifyError };
+exports.YAMLError = YAMLError;
+exports.YAMLParseError = YAMLParseError;
+exports.YAMLWarning = YAMLWarning;
+exports.prettifyError = prettifyError;

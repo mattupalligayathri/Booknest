@@ -1,36 +1,28 @@
-export function merge(...sets) {
-    if (sets.length > 1) {
-        sets[0] = sets[0].slice(0, -1);
-        const xl = sets.length - 1;
-        for (let x = 1; x < xl; ++x) {
-            sets[x] = sets[x].slice(1, -1);
-        }
-        sets[xl] = sets[xl].slice(1);
-        return sets.join('');
-    }
-    else {
-        return sets[0];
-    }
-}
-export function subexp(str) {
-    return "(?:" + str + ")";
-}
-export function typeOf(o) {
-    return o === undefined ? "undefined" : (o === null ? "null" : Object.prototype.toString.call(o).split(" ").pop().split("]").shift().toLowerCase());
-}
-export function toUpperCase(str) {
-    return str.toUpperCase();
-}
-export function toArray(obj) {
-    return obj !== undefined && obj !== null ? (obj instanceof Array ? obj : (typeof obj.length !== "number" || obj.split || obj.setInterval || obj.call ? [obj] : Array.prototype.slice.call(obj))) : [];
-}
-export function assign(target, source) {
-    const obj = target;
-    if (source) {
-        for (const key in source) {
-            obj[key] = source[key];
-        }
-    }
-    return obj;
-}
-//# sourceMappingURL=util.js.map
+'use strict';
+
+var createNode = require('./doc/createNode.js');
+var log = require('./log.js');
+var Pair = require('./nodes/Pair.js');
+var YAMLMap = require('./nodes/YAMLMap.js');
+var toJS = require('./nodes/toJS.js');
+var map = require('./schema/common/map.js');
+var seq = require('./schema/common/seq.js');
+var string = require('./schema/common/string.js');
+var foldFlowLines = require('./stringify/foldFlowLines.js');
+var stringifyNumber = require('./stringify/stringifyNumber.js');
+var stringifyString = require('./stringify/stringifyString.js');
+
+
+
+exports.createNode = createNode.createNode;
+exports.debug = log.debug;
+exports.warn = log.warn;
+exports.createPair = Pair.createPair;
+exports.findPair = YAMLMap.findPair;
+exports.toJS = toJS.toJS;
+exports.mapTag = map.map;
+exports.seqTag = seq.seq;
+exports.stringTag = string.string;
+exports.foldFlowLines = foldFlowLines.foldFlowLines;
+exports.stringifyNumber = stringifyNumber.stringifyNumber;
+exports.stringifyString = stringifyString.stringifyString;
