@@ -1,28 +1,10 @@
 language: node_js
-sudo: false
-
 node_js:
-  - 9
-  - 8
-  - 7
-  - 6
-  - 5
-  - 4
-  - 4.0
-  - iojs-v3
-  - iojs-v2
-  - iojs-v1
-  - 0.12
-  - 0.10
-
-cache:
-  directories:
-    - node_modules
-
-after_script:
-- npm run coverage
-
-notifications:
-  email:
-    on_success: never
-    on_failure: always
+  - node
+  - lts/*
+script:
+  - npm run lint
+  # test-coverage will also run the tests, but does not print helpful output upon test failure.
+  # So we also run the tests separately.
+  - npm run test
+  - npm run test-coverage && cat coverage/lcov.info | ./node_modules/.bin/coveralls && rm -rf coverage
