@@ -3,10 +3,18 @@
 
 	"extends": "@ljharb",
 
-	"globals": {
-		"Uint8Array": false,
+	"rules": {
+		"id-length": "off",
 	},
 
-	"rules": {
-	},
+	"overrides": [
+		{
+			"files": ["test/**/*.js"],
+			"rules": {
+				"id-length": "off",
+				"multiline-comment-style": "off",
+				"no-empty-function": "off",
+			},
+		},
+	],
 }
