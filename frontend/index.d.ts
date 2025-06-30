@@ -1,22 +1,43 @@
-/**
-Regular expression for matching a [shebang](https://en.wikipedia.org/wiki/Shebang_(Unix)) line.
+// TypeScript Version: 3.2
 
-@example
-```
-import shebangRegex = require('shebang-regex');
+/// <reference types="node" lib="esnext" />
 
-const string = '#!/usr/bin/env node\nconsole.log("unicorns");';
+import * as fs from 'fs';
+import { Readable } from 'stream';
 
-shebangRegex.test(string);
-//=> true
+declare namespace readdir {
+  interface EntryInfo {
+    path: string;
+    fullPath: string;
+    basename: string;
+    stats?: fs.Stats;
+    dirent?: fs.Dirent;
+  }
 
-shebangRegex.exec(string)[0];
-//=> '#!/usr/bin/env node'
+  interface ReaddirpOptions {
+    root?: string;
+    fileFilter?: string | string[] | ((entry: EntryInfo) => boolean);
+    directoryFilter?: string | string[] | ((entry: EntryInfo) => boolean);
+    type?: 'files' | 'directories' | 'files_directories' | 'all';
+    lstat?: boolean;
+    depth?: number;
+    alwaysStat?: boolean;
+  }
 
-shebangRegex.exec(string)[1];
-//=> '/usr/bin/env node'
-```
-*/
-declare const shebangRegex: RegExp;
+  interface ReaddirpStream extends Readable, AsyncIterable<EntryInfo> {
+    read(): EntryInfo;
+    [Symbol.asyncIterator](): AsyncIterableIterator<EntryInfo>;
+  }
 
-export = shebangRegex;
+  function promise(
+    root: string,
+    options?: ReaddirpOptions
+  ): Promise<EntryInfo[]>;
+}
+
+declare function readdir(
+  root: string,
+  options?: readdir.ReaddirpOptions
+): readdir.ReaddirpStream;
+
+export = readdir;

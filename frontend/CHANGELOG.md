@@ -1,41 +1,91 @@
-# Changelog
+## 0.4.5 (Mar 25, 2021)
 
-All notable changes to this project will be documented in this file.
+### chore
 
-The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/)
-and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
+- fix: previous release
 
-## [v1.1.1](https://github.com/ljharb/set-function-length/compare/v1.1.0...v1.1.1) - 2023-10-19
+## 0.4.4 (Mar 18, 2021)
 
-### Fixed
+### chore
 
-- [Fix] move `define-data-property` to runtime deps [`#2`](https://github.com/ljharb/set-function-length/issues/2)
+- bring up all dev deps (incl. eslint and webpack) to the latest
+- move CI to Github actions
+- add linting and building to ci pipeline (in addition to unit testing)
 
-### Commits
+## 0.4.0 (Seq 28, 2018)
 
-- [Dev Deps] update `object-inspect`; add missing `call-bind` [`5aecf79`](https://github.com/ljharb/set-function-length/commit/5aecf79e7d6400957a5d9bd9ac20d4528908ca18)
+### feat
 
-## [v1.1.0](https://github.com/ljharb/set-function-length/compare/v1.0.1...v1.1.0) - 2023-10-13
+- use `decimal.js-light` to handle large number or high precision
 
-### Commits
+## 0.3.2 (Aug 21, 2017)
 
-- [New] add `env` entry point [`475c87a`](https://github.com/ljharb/set-function-length/commit/475c87aa2f59b700aaed589d980624ec596acdcb)
-- [Tests] add coverage with `nyc` [`14f0bf8`](https://github.com/ljharb/set-function-length/commit/14f0bf8c145ae60bf14a026420a06bb7be132c36)
-- [eslint] fix linting failure [`fb516f9`](https://github.com/ljharb/set-function-length/commit/fb516f93c664057138c53559ef63c8622a093335)
-- [Deps] update `define-data-property` [`d727e7c`](https://github.com/ljharb/set-function-length/commit/d727e7c6c9a40d7bf26797694e500ea68741feea)
+### fix
 
-## [v1.0.1](https://github.com/ljharb/set-function-length/compare/v1.0.0...v1.0.1) - 2023-10-12
+- fix `getNiceTickValues` when the number is a scientific notation
 
-### Commits
+## 0.3.1 (Jun 11, 2017)
 
-- [Refactor] use `get-intrinsic`, since it‘s in the dep graph anyways [`278a954`](https://github.com/ljharb/set-function-length/commit/278a954a06cd849051c569ff7aee56df6798933e)
-- [meta] add `exports` [`72acfe5`](https://github.com/ljharb/set-function-length/commit/72acfe5a0310071fb205a72caba5ecbab24336a0)
+### fix
 
-## v1.0.0 - 2023-10-12
+- fix `getDigitCount` when the number is a scientific notation
 
-### Commits
+## 0.3.0 (Mar 01, 2017)
 
-- Initial implementation, tests, readme [`fce14e1`](https://github.com/ljharb/set-function-length/commit/fce14e17586460e4f294405173be72b6ffdf7e5f)
-- Initial commit [`ca7ba85`](https://github.com/ljharb/set-function-length/commit/ca7ba857c7c283f9d26e21f14e71cd388f2cb722)
-- npm init [`6a7e493`](https://github.com/ljharb/set-function-length/commit/6a7e493927736cebcaf5c1a84e69b8e6b7b744d8)
-- Only apps should have lockfiles [`d2bf6c4`](https://github.com/ljharb/set-function-length/commit/d2bf6c43de8a51b02a0aa53e8d62cb50c4a2b0da)
+### feat
+
+- Add new ticks function `getTickValuesFixedDomain`
+
+## 0.2.3 (Feb 28, 2017)
+
+### fix
+
+- Fix calculation precision of calculateStep, add Arithmetic.modulo
+
+## 0.2.2 (Feb 28, 2017)
+
+### fix
+
+- Fix calculation precision of calculateStep
+
+## 0.2.1 (July 25, 2016)
+
+### fix
+
+- Fix the precision of ticks for decimals
+
+## 0.2.0 (July 25, 2016)
+
+### feat
+
+- Support `allowDecimals` option
+
+## 0.1.11 (July 19, 2016)
+
+### fix
+
+- Tweak the strategy of calculating step of ticks
+
+## 0.1.10 (July 07, 2016)
+
+### deps
+
+- update deps and fix lint error
+
+## 0.1.9 (April 08, 2016)
+
+### fix
+
+- Fix ticks for interval [0, 0]
+
+## 0.1.8 (Feb 04, 2016)
+
+### refactor
+
+- Refactor the export method
+
+## 0.1.7 (Feb 04, 2016)
+
+### chore
+
+- Optimize npm script commands

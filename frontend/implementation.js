@@ -1,15 +1,49 @@
 'use strict';
 
-var callBound = require('call-bind/callBound');
-var $replace = callBound('String.prototype.replace');
+var GetIntrinsic = require('get-intrinsic');
+var IsCallable = require('es-abstract/2023/IsCallable');
+var Type = require('es-abstract/2023/Type');
+var whichBuiltinType = require('which-builtin-type');
 
-var mvsIsWS = (/^\s$/).test('\u180E');
-/* eslint-disable no-control-regex */
-var startWhitespace = mvsIsWS
-	? /^[\x09\x0A\x0B\x0C\x0D\x20\xA0\u1680\u180E\u2000\u2001\u2002\u2003\u2004\u2005\u2006\u2007\u2008\u2009\u200A\u202F\u205F\u3000\u2028\u2029\uFEFF]+/
-	: /^[\x09\x0A\x0B\x0C\x0D\x20\xA0\u1680\u2000\u2001\u2002\u2003\u2004\u2005\u2006\u2007\u2008\u2009\u200A\u202F\u205F\u3000\u2028\u2029\uFEFF]+/;
-/* eslint-enable no-control-regex */
+var $gPO = GetIntrinsic('%Object.getPrototypeOf%', true);
+var $ObjectPrototype = GetIntrinsic('%Object.prototype%');
+var $TypeError = GetIntrinsic('%TypeError%');
 
-module.exports = function trimStart() {
-	return $replace(this, startWhitespace, '');
+var hasProto = [].__proto__ === Array.prototype; // eslint-disable-line no-proto
+
+module.exports = function getPrototypeOf(O) {
+	if (Type(O) !== 'Object') {
+		throw new $TypeError('Reflect.getPrototypeOf called on non-object');
+	}
+
+	if ($gPO) {
+		return $gPO(O);
+	}
+
+	if (hasProto) {
+		// eslint-disable-next-line no-proto
+		var proto = O.__proto__;
+		if (proto || proto === null) {
+			return proto;
+		}
+	}
+	var type = whichBuiltinType(O);
+	if (type) {
+		var intrinsic = GetIntrinsic('%' + type + '%.prototype', true);
+		if (intrinsic) {
+			return intrinsic;
+		}
+	}
+	if (IsCallable(O.constructor)) {
+		return O.constructor.prototype;
+	}
+	if (O instanceof Object) {
+		return $ObjectPrototype;
+	}
+
+	/*
+	 * Correctly return null for Objects created with `Object.create(null)` (shammed or native) or `{ __proto__: null}`.  Also returns null for
+	 * cross-realm objects on browsers that lack `__proto__` support (like IE <11), but that's the best we can do.
+	 */
+	return null;
 };
