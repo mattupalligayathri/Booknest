@@ -1,146 +1,210 @@
-# uncontrollable
+# type-check [![Build Status](https://travis-ci.org/gkz/type-check.png?branch=master)](https://travis-ci.org/gkz/type-check)
 
-Wrap a controlled react component, to allow specific prop/handler pairs to be omitted by Component consumers. Uncontrollable allows you to write React components, with minimal state, and then wrap them in a component that will manage state for prop/handlers if they are excluded.
+<a name="type-check" />
 
-## Install
+`type-check` is a library which allows you to check the types of JavaScript values at runtime with a Haskell like type syntax. It is great for checking external input, for testing, or even for adding a bit of safety to your internal code. It is a major component of [levn](https://github.com/gkz/levn). MIT license. Version 0.4.0. Check out the [demo](http://gkz.github.io/type-check/).
 
-```sh
-npm i -S uncontrollable
-```
+For updates on `type-check`, [follow me on twitter](https://twitter.com/gkzahariev).
 
-### Usage
+    npm install type-check
 
-If you are a bit unsure on the _why_ of this module read the next section first. If you just want to see some real-world examples, check out [React Widgets](https://github.com/jquense/react-widgets) which makes [heavy use of this strategy](https://github.com/jquense/react-widgets/blob/5d1b530cb094cdc72f577fe01abe4a02dd265400/src/Multiselect.jsx#L521).
+## Quick Examples
 
 ```js
-import { uncontrollable } from 'uncontrollable'
+// Basic types:
+var typeCheck = require('type-check').typeCheck;
+typeCheck('Number', 1);               // true
+typeCheck('Number', 'str');           // false
+typeCheck('Error', new Error);        // true
+typeCheck('Undefined', undefined);    // true
+
+// Comment
+typeCheck('count::Number', 1);        // true
+
+// One type OR another type:
+typeCheck('Number | String', 2);      // true
+typeCheck('Number | String', 'str');  // true
+
+// Wildcard, matches all types:
+typeCheck('*', 2) // true
+
+// Array, all elements of a single type:
+typeCheck('[Number]', [1, 2, 3]);                // true
+typeCheck('[Number]', [1, 'str', 3]);            // false
+
+// Tuples, or fixed length arrays with elements of different types:
+typeCheck('(String, Number)', ['str', 2]);       // true
+typeCheck('(String, Number)', ['str']);          // false
+typeCheck('(String, Number)', ['str', 2, 5]);    // false
+
+// Object properties:
+typeCheck('{x: Number, y: Boolean}', {x: 2, y: false});             // true
+typeCheck('{x: Number, y: Boolean}',       {x: 2});                 // false
+typeCheck('{x: Number, y: Maybe Boolean}', {x: 2});                 // true
+typeCheck('{x: Number, y: Boolean}',      {x: 2, y: false, z: 3});  // false
+typeCheck('{x: Number, y: Boolean, ...}', {x: 2, y: false, z: 3});  // true
+
+// A particular type AND object properties:
+typeCheck('RegExp{source: String, ...}', /re/i);          // true
+typeCheck('RegExp{source: String, ...}', {source: 're'}); // false
+
+// Custom types:
+var opt = {customTypes:
+  {Even: { typeOf: 'Number', validate: function(x) { return x % 2 === 0; }}}};
+typeCheck('Even', 2, opt); // true
+
+// Nested:
+var type = '{a: (String, [Number], {y: Array, ...}), b: Error{message: String, ...}}'
+typeCheck(type, {a: ['hi', [1, 2, 3], {y: [1, 'ms']}], b: new Error('oh no')}); // true
 ```
 
-### API
+Check out the [type syntax format](#syntax) and [guide](#guide).
 
-#### `uncontrollable(Component, propHandlerHash, [methods])`
+## Usage
 
-- `Component`: is a valid react component, such as the result of `createClass`
-- `propHandlerHash`: define the pairs of prop/handlers you want to be uncontrollable, e.g. `{ value: 'onChange'}`
-- `methods`: since uncontrollable wraps your component in another component, methods are not immediately accessible. You can proxy them through by providing the names of the methods you want to continue to expose. **You don't need this if you are using React >= v16.3.0, the ref will automatically be forwarded to the uinderlying component**
-
-For every prop you indicate as uncontrollable, the returned component will also accept an initial, `default` value for that prop. For example, `open` can be left uncontrolled but the initial value can be set via `defaultOpen={true}` if we want it to start open.
+`require('type-check');` returns an object that exposes four properties. `VERSION` is the current version of the library as a string. `typeCheck`, `parseType`, and `parsedTypeCheck` are functions.
 
 ```js
-import { uncontrollable } from 'uncontrollable'
+// typeCheck(type, input, options);
+typeCheck('Number', 2);               // true
 
-const UncontrolledCombobox = uncontrollable(Combobox, {
-  value: 'onChange',
-  open: 'onToggle',
-  searchTerm: 'onSearch', //the current typed value (maybe it filters the dropdown list)
-})
+// parseType(type);
+var parsedType = parseType('Number'); // object
+
+// parsedTypeCheck(parsedType, input, options);
+parsedTypeCheck(parsedType, 2);       // true
 ```
 
-Since uncontrollable creates a new component that wraps your existing one, methods on your underlying component
-won't be immediately accessible. In general this sort of access is not idiomatic React, but it does have its place.
-The third argument of `uncontrollable()` is an optional array of method names you want uncontrollable to "pass through"
-to the original component.
+### typeCheck(type, input, options)
+
+`typeCheck` checks a JavaScript value `input` against `type` written in the [type format](#type-format) (and taking account the optional `options`) and returns whether the `input` matches the `type`.
+
+##### arguments
+* type - `String` - the type written in the [type format](#type-format) which to check against
+* input - `*` - any JavaScript value, which is to be checked against the type
+* options - `Maybe Object` - an optional parameter specifying additional options, currently the only available option is specifying [custom types](#custom-types)
+
+##### returns
+`Boolean` - whether the input matches the type
+
+##### example
+```js
+typeCheck('Number', 2); // true
+```
+
+### parseType(type)
+
+`parseType` parses string `type` written in the [type format](#type-format) into an object representing the parsed type.
+
+##### arguments
+* type - `String` - the type written in the [type format](#type-format) which to parse
+
+##### returns
+`Object` - an object in the parsed type format representing the parsed type
+
+##### example
+```js
+parseType('Number'); // [{type: 'Number'}]
+```
+### parsedTypeCheck(parsedType, input, options)
+
+`parsedTypeCheck` checks a JavaScript value `input` against parsed `type` in the parsed type format (and taking account the optional `options`) and returns whether the `input` matches the `type`. Use this in conjunction with `parseType` if you are going to use a type more than once.
+
+##### arguments
+* type - `Object` - the type in the parsed type format which to check against
+* input - `*` - any JavaScript value, which is to be checked against the type
+* options - `Maybe Object` - an optional parameter specifying additional options, currently the only available option is specifying [custom types](#custom-types)
+
+##### returns
+`Boolean` - whether the input matches the type
+
+##### example
+```js
+parsedTypeCheck([{type: 'Number'}], 2); // true
+var parsedType = parseType('String');
+parsedTypeCheck(parsedType, 'str');     // true
+```
+
+<a name="type-format" />
+## Type Format
+
+### Syntax
+
+White space is ignored. The root node is a __Types__.
+
+* __Identifier__ = `[\$\w]+` - a group of any lower or upper case letters, numbers, underscores, or dollar signs - eg. `String`
+* __Type__ = an `Identifier`, an `Identifier` followed by a `Structure`, just a `Structure`, or a wildcard `*` - eg. `String`, `Object{x: Number}`, `{x: Number}`, `Array{0: String, 1: Boolean, length: Number}`, `*`
+* __Types__ = optionally a comment (an `Identifier` followed by a `::`), optionally the identifier `Maybe`, one or more `Type`, separated by `|` - eg. `Number`, `String | Date`, `Maybe Number`, `Maybe Boolean | String`
+* __Structure__ = `Fields`, or a `Tuple`, or an `Array` - eg. `{x: Number}`, `(String, Number)`, `[Date]`
+* __Fields__ = a `{`, followed one or more `Field` separated by a comma `,` (trailing comma `,` is permitted), optionally an `...` (always preceded by a comma `,`), followed by a `}` - eg. `{x: Number, y: String}`, `{k: Function, ...}`
+* __Field__ = an `Identifier`, followed by a colon `:`, followed by `Types` - eg. `x: Date | String`, `y: Boolean`
+* __Tuple__ = a `(`, followed by one or more `Types` separated by a comma `,` (trailing comma `,` is permitted), followed by a `)` - eg `(Date)`, `(Number, Date)`
+* __Array__ = a `[` followed by exactly one `Types` followed by a `]` - eg. `[Boolean]`, `[Boolean | Null]`
+
+### Guide
+
+`type-check` uses `Object.toString` to find out the basic type of a value. Specifically,
 
 ```js
-let UncontrolledForm = uncontrollable(Form, { value: 'onChange' }, ['submit'])
-
-//when you use a ref this will work
-this.refs.myForm.submit()
+{}.toString.call(VALUE).slice(8, -1)
+{}.toString.call(true).slice(8, -1) // 'Boolean'
 ```
+A basic type, eg. `Number`, uses this check. This is much more versatile than using `typeof` - for example, with `document`, `typeof` produces `'object'` which isn't that useful, and our technique produces `'HTMLDocument'`.
 
-#### `useUncontrolled(props, propsHandlerHash) => controlledProps`
+You may check for multiple types by separating types with a `|`. The checker proceeds from left to right, and passes if the value is any of the types - eg. `String | Boolean` first checks if the value is a string, and then if it is a boolean. If it is none of those, then it returns false.
 
-A React hook that can be used in place of the above Higher order Component. It
-returns a complete set of `props` which are safe to spread through to a child element.
+Adding a `Maybe` in front of a list of multiple types is the same as also checking for `Null` and `Undefined` - eg. `Maybe String` is equivalent to `Undefined | Null | String`.
+
+You may add a comment to remind you of what the type is for by following an identifier with a `::` before a type (or multiple types). The comment is simply thrown out.
+
+The wildcard `*` matches all types.
+
+There are three types of structures for checking the contents of a value: 'fields', 'tuple', and 'array'.
+
+If used by itself, a 'fields' structure will pass with any type of object as long as it is an instance of `Object` and the properties pass - this allows for duck typing - eg. `{x: Boolean}`.
+
+To check if the properties pass, and the value is of a certain type, you can specify the type - eg. `Error{message: String}`.
+
+If you want to make a field optional, you can simply use `Maybe` - eg. `{x: Boolean, y: Maybe String}` will still pass if `y` is undefined (or null).
+
+If you don't care if the value has properties beyond what you have specified, you can use the 'etc' operator `...` - eg. `{x: Boolean, ...}` will match an object with an `x` property that is a boolean, and with zero or more other properties.
+
+For an array, you must specify one or more types (separated by `|`) - it will pass for something of any length as long as each element passes the types provided - eg. `[Number]`, `[Number | String]`.
+
+A tuple checks for a fixed number of elements, each of a potentially different type. Each element is separated by a comma - eg. `(String, Number)`.
+
+An array and tuple structure check that the value is of type `Array` by default, but if another type is specified, they will check for that instead - eg. `Int32Array[Number]`. You can use the wildcard `*` to search for any type at all.
+
+Check out the [type precedence](https://github.com/zaboco/type-precedence) library for type-check.
+
+## Options
+
+Options is an object. It is an optional parameter to the `typeCheck` and `parsedTypeCheck` functions. The only current option is `customTypes`.
+
+<a name="custom-types" />
+### Custom Types
+
+__Example:__
 
 ```js
-import { useUncontrolled } from 'uncontrollable'
-
-const UncontrolledCombobox = props => {
-  // filters out defaultValue, defaultOpen and returns controlled
-  // versions of onChange, and onToggle.
-  const controlledProps = useUncontrolled(props, {
-    value: 'onChange',
-    open: 'onToggle',
-  })
-
-  return <Checkbox {...controlledProps} />
-}
-```
-
-### Use Case
-
-One of the strengths of React is its extensibility model, enabled by a common practice of pushing component state as high up the tree as possible. While great for enabling extremely flexible and easy to reason about components, this can produce a lot of boilerplate to wire components up with every use. For simple components (like an input) this is usually a matter of tying the input `value` prop to a parent state property via its `onChange` handler. Here is an extremely common pattern:
-
-```jsx
-  render() {
-    return (
-      <input type='text'
-        value={this.state.value}
-        onChange={ e => this.setState({ value: e.target.value })}
-      />
-    )
+var options = {
+  customTypes: {
+    Even: {
+      typeOf: 'Number',
+      validate: function(x) {
+        return x % 2 === 0;
+      }
+    }
   }
+};
+typeCheck('Even', 2, options); // true
+typeCheck('Even', 3, options); // false
 ```
 
-This pattern moves the responsibility of managing the `value` from the input to its parent and mimics "two-way" databinding. Sometimes, however, there is no need for the parent to manage the input's state directly. In that case, all we want to do is set the initial `value` of the input and let the input manage it from then on. React deals with this through "uncontrolled" inputs, where if you don't indicate that you want to control the state of the input externally via a `value` prop it will just do the book-keeping for you.
+`customTypes` allows you to set up custom types for validation. The value of this is an object. The keys of the object are the types you will be matching. Each value of the object will be an object having a `typeOf` property - a string, and `validate` property - a function.
 
-This is a great pattern which we can make use of in our own Components. It is often best to build each component to be as stateless as possible, assuming that the parent will want to control everything that makes sense. Take a simple Dropdown component as an example
+The `typeOf` property is the type the value should be (optional - if not set only `validate` will be used), and `validate` is a function which should return true if the value is of that type. `validate` receives one parameter, which is the value that we are checking.
 
-```js
-class SimpleDropdown extends React.Component {
-  static propTypes = {
-    value: React.PropTypes.string,
-    onChange: React.PropTypes.func,
-    open: React.PropTypes.bool,
-    onToggle: React.PropTypes.func,
-  }
+## Technical About
 
-  render() {
-    return (
-      <div>
-        <input
-          value={this.props.value}
-          onChange={e => this.props.onChange(e.target.value)}
-        />
-        <button onClick={e => this.props.onToggle(!this.props.open)}>
-          open
-        </button>
-        {this.props.open && (
-          <ul className="open">
-            <li>option 1</li>
-            <li>option 2</li>
-          </ul>
-        )}
-      </div>
-    )
-  }
-}
-```
-
-Notice how we don't track any state in our simple dropdown? This is great because a consumer of our module will have the all the flexibility to decide what the behavior of the dropdown should be. Also notice our public API (propTypes), it consists of common pattern: a property we want set (`value`, `open`), and a set of handlers that indicate _when_ we want them set (`onChange`, `onToggle`). It is up to the parent component to change the `value` and `open` props in response to the handlers.
-
-While this pattern offers an excellent amount of flexibility to consumers, it also requires them to write a bunch of boilerplate code that probably won't change much from use to use. In all likelihood they will always want to set `open` in response to `onToggle`, and only in rare cases will want to override that behavior. This is where the controlled/uncontrolled pattern comes in.
-
-We want to just handle the open/onToggle case ourselves if the consumer doesn't provide a `open` prop (indicating that they want to control it). Rather than complicating our dropdown component with all that logic, obscuring the business logic of our dropdown, we can add it later, by taking our dropdown and wrapping it inside another component that handles that for us.
-
-`uncontrollable` allows you separate out the logic necessary to create controlled/uncontrolled inputs letting you focus on creating a completely controlled input and wrapping it later. This tends to be a lot simpler to reason about as well.
-
-```js
-  import { uncontrollable } from 'uncontrollable';
-
-  const UncontrollableDropdown = uncontrollable(SimpleDropdown, {
-    value: 'onChange',
-    open: 'onToggle'
-  })
-
-  <UncontrollableDropdown
-    value={this.state.val} // we can still control these props if we want
-    onChange={val => this.setState({ val })}
-    defaultOpen={true} /> // or just let the UncontrollableDropdown handle it
-                          // and we just set an initial value (or leave it out completely)!
-```
-
-Now we don't need to worry about the open onToggle! The returned component will track `open` for us by assuming that it should just set `open` to whatever `onToggle` returns. If we _do_ want to worry about it we can just provide `open` and `onToggle` props and the uncontrolled input will just pass them through.
-
-The above is a contrived example but it allows you to wrap even more complex Components, giving you a lot of flexibility in the API you can offer a consumer of your Component. For every pair of prop/handlers you also get a defaultProp of the form "default[PropName]" so `value` -> `defaultValue`, and `open` -> `defaultOpen`, etc. [React Widgets](https://github.com/jquense/react-widgets) makes heavy use of this strategy, you can see it in action here: https://github.com/jquense/react-widgets/blob/5d1b530cb094cdc72f577fe01abe4a02dd265400/src/Multiselect.jsx#L521
+`type-check` is written in [LiveScript](http://livescript.net/) - a language that compiles to JavaScript. It also uses the [prelude.ls](http://preludels.com/) library.

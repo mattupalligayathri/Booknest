@@ -3,8 +3,8 @@
 Object.defineProperty(exports, "__esModule", {
   value: true
 });
-exports.default = _default;
+exports.default = number;
 
-function _default(x) {
-  return x;
+function number(x) {
+  return +x;
 }
