@@ -1,5 +1,5 @@
 /**
- * React Router DOM v6.19.0
+ * React Router v6.19.0
  *
  * Copyright (c) Remix Software Inc.
  *
@@ -13,7 +13,7 @@
 /* eslint-env node */
 
 if (process.env.NODE_ENV === "production") {
-  module.exports = require("./umd/react-router-dom.production.min.js");
+  module.exports = require("./umd/react-router.production.min.js");
 } else {
-  module.exports = require("./umd/react-router-dom.development.js");
+  module.exports = require("./umd/react-router.development.js");
 }
