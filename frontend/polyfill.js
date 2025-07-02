@@ -3,13 +3,12 @@
 var implementation = require('./implementation');
 
 module.exports = function getPolyfill() {
-	if (!String.prototype.trimEnd && !String.prototype.trimRight) {
-		return implementation;
+	if (String.prototype.matchAll) {
+		try {
+			''.matchAll(RegExp.prototype);
+		} catch (e) {
+			return String.prototype.matchAll;
+		}
 	}
-	var zeroWidthSpace = '\u200b';
-	var trimmed = zeroWidthSpace.trimEnd ? zeroWidthSpace.trimEnd() : zeroWidthSpace.trimRight();
-	if (trimmed !== zeroWidthSpace) {
-		return implementation;
-	}
-	return String.prototype.trimEnd || String.prototype.trimRight;
+	return implementation;
 };

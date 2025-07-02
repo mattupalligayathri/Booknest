@@ -1,3 +1,5 @@
 'use strict';
-
-module.exports = null;
+module.exports = {
+	stdout: false,
+	stderr: false
+};

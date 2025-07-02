@@ -5,20 +5,11 @@
 
 	"rules": {
 		"id-length": "off",
+		"max-lines-per-function": "off",
 		"new-cap": ["error", {
 			"capIsNewExceptions": [
-				"RequireObjectCoercible",
+				"GetIntrinsic",
 			],
 		}],
 	},
-
-	"overrides": [
-		{
-			"files": "test/**",
-			"rules": {
-				"id-length": 0,
-				"no-invalid-this": 1,
-			},
-		},
-	],
 }
