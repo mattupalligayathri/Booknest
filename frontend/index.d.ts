@@ -1,17 +1,22 @@
 /**
-Strip [ANSI escape codes](https://en.wikipedia.org/wiki/ANSI_escape_code) from a string.
+Regular expression for matching a [shebang](https://en.wikipedia.org/wiki/Shebang_(Unix)) line.
 
 @example
 ```
-import stripAnsi = require('strip-ansi');
+import shebangRegex = require('shebang-regex');
 
-stripAnsi('\u001B[4mUnicorn\u001B[0m');
-//=> 'Unicorn'
+const string = '#!/usr/bin/env node\nconsole.log("unicorns");';
 
-stripAnsi('\u001B]8;;https://github.com\u0007Click\u001B]8;;\u0007');
-//=> 'Click'
+shebangRegex.test(string);
+//=> true
+
+shebangRegex.exec(string)[0];
+//=> '#!/usr/bin/env node'
+
+shebangRegex.exec(string)[1];
+//=> '/usr/bin/env node'
 ```
 */
-declare function stripAnsi(string: string): string;
+declare const shebangRegex: RegExp;
 
-export = stripAnsi;
+export = shebangRegex;

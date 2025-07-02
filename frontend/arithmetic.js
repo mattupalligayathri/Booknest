@@ -1,10 +1,22 @@
+"use strict";
+
+Object.defineProperty(exports, "__esModule", {
+  value: true
+});
+exports.default = void 0;
+
+var _decimal = _interopRequireDefault(require("decimal.js-light"));
+
+var _utils = require("./utils");
+
+function _interopRequireDefault(obj) { return obj && obj.__esModule ? obj : { default: obj }; }
+
 /**
  * @fileOverview 一些公用的运算方法
  * @author xile611
  * @date 2015-09-17
  */
-import Decimal from 'decimal.js-light';
-import { curry } from './utils';
+
 /**
  * 获取数值的位数
  * 其中绝对值属于区间[0.1, 1)， 得到的值为0
@@ -14,14 +26,13 @@ import { curry } from './utils';
  * @param  {Number} value 数值
  * @return {Integer} 位数
  */
-
 function getDigitCount(value) {
   var result;
 
   if (value === 0) {
     result = 1;
   } else {
-    result = Math.floor(new Decimal(value).abs().log(10).toNumber()) + 1;
+    result = Math.floor(new _decimal.default(value).abs().log(10).toNumber()) + 1;
   }
 
   return result;
@@ -38,7 +49,7 @@ function getDigitCount(value) {
 
 
 function rangeStep(start, end, step) {
-  var num = new Decimal(start);
+  var num = new _decimal.default(start);
   var i = 0;
   var result = []; // magic number to prevent infinite loop
 
@@ -60,7 +71,7 @@ function rangeStep(start, end, step) {
  */
 
 
-var interpolateNumber = curry(function (a, b, t) {
+var interpolateNumber = (0, _utils.curry)(function (a, b, t) {
   var newA = +a;
   var newB = +b;
   return newA + t * (newB - newA);
@@ -74,7 +85,7 @@ var interpolateNumber = curry(function (a, b, t) {
  * @return {Number}   当x在 a ~ b这个范围内时，返回值属于[0, 1]
  */
 
-var uninterpolateNumber = curry(function (a, b, x) {
+var uninterpolateNumber = (0, _utils.curry)(function (a, b, x) {
   var diff = b - +a;
   diff = diff || Infinity;
   return (x - a) / diff;
@@ -89,15 +100,16 @@ var uninterpolateNumber = curry(function (a, b, x) {
  * 当x不在 a ~ b这个区间时，会截断到 a ~ b 这个区间
  */
 
-var uninterpolateTruncation = curry(function (a, b, x) {
+var uninterpolateTruncation = (0, _utils.curry)(function (a, b, x) {
   var diff = b - +a;
   diff = diff || Infinity;
   return Math.max(0, Math.min(1, (x - a) / diff));
 });
-export default {
+var _default = {
   rangeStep: rangeStep,
   getDigitCount: getDigitCount,
   interpolateNumber: interpolateNumber,
   uninterpolateNumber: uninterpolateNumber,
   uninterpolateTruncation: uninterpolateTruncation
 };
+exports.default = _default;

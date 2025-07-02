@@ -1,41 +1,44 @@
-# Changelog
+## [v0.3.2]
+> 2016-05-13
 
-All notable changes to this project will be documented in this file.
+- **Bugfix:** Emit each deprecation warning message only once ([#24])
 
-The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/)
-and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
+[v0.3.2]: https://github.com/react-bootstrap/react-prop-types/compare/v0.3.1...v0.3.2
+[#24]: https://github.com/react-bootstrap/react-prop-types/pull/24
 
-## [v1.1.1](https://github.com/ljharb/set-function-length/compare/v1.1.0...v1.1.1) - 2023-10-19
 
-### Fixed
+## [v0.3.1]
+> 2016-05-09
 
-- [Fix] move `define-data-property` to runtime deps [`#2`](https://github.com/ljharb/set-function-length/issues/2)
+- **Bugfix:** Support `isRequired` on `all` ([#22])
 
-### Commits
+[v0.3.1]: https://github.com/react-bootstrap/react-prop-types/compare/v0.3.0...v0.3.1
+[#22]: https://github.com/react-bootstrap/react-prop-types/pull/22
 
-- [Dev Deps] update `object-inspect`; add missing `call-bind` [`5aecf79`](https://github.com/ljharb/set-function-length/commit/5aecf79e7d6400957a5d9bd9ac20d4528908ca18)
 
-## [v1.1.0](https://github.com/ljharb/set-function-length/compare/v1.0.1...v1.1.0) - 2023-10-13
+v0.3.0 - Thu, 10 Sep 2015 19:23:24 GMT
+--------------------------------------
 
-### Commits
+- [3784da4](../../commit/3784da4) [changed] Use es6 rest for parameters of all and singlePropFrom
+- [447c243](../../commit/447c243) [fixed] 'isRequireForA11y' undefined/null checking
 
-- [New] add `env` entry point [`475c87a`](https://github.com/ljharb/set-function-length/commit/475c87aa2f59b700aaed589d980624ec596acdcb)
-- [Tests] add coverage with `nyc` [`14f0bf8`](https://github.com/ljharb/set-function-length/commit/14f0bf8c145ae60bf14a026420a06bb7be132c36)
-- [eslint] fix linting failure [`fb516f9`](https://github.com/ljharb/set-function-length/commit/fb516f93c664057138c53559ef63c8622a093335)
-- [Deps] update `define-data-property` [`d727e7c`](https://github.com/ljharb/set-function-length/commit/d727e7c6c9a40d7bf26797694e500ea68741feea)
 
-## [v1.0.1](https://github.com/ljharb/set-function-length/compare/v1.0.0...v1.0.1) - 2023-10-12
 
-### Commits
+v0.2.2 - Fri, 21 Aug 2015 19:22:51 GMT
+--------------------------------------
 
-- [Refactor] use `get-intrinsic`, since it‘s in the dep graph anyways [`278a954`](https://github.com/ljharb/set-function-length/commit/278a954a06cd849051c569ff7aee56df6798933e)
-- [meta] add `exports` [`72acfe5`](https://github.com/ljharb/set-function-length/commit/72acfe5a0310071fb205a72caba5ecbab24336a0)
+- [7d79e8d](../../commit/7d79e8d) [added] 'deprecated' wrapper for property deprecation warning
 
-## v1.0.0 - 2023-10-12
 
-### Commits
 
-- Initial implementation, tests, readme [`fce14e1`](https://github.com/ljharb/set-function-length/commit/fce14e17586460e4f294405173be72b6ffdf7e5f)
-- Initial commit [`ca7ba85`](https://github.com/ljharb/set-function-length/commit/ca7ba857c7c283f9d26e21f14e71cd388f2cb722)
-- npm init [`6a7e493`](https://github.com/ljharb/set-function-length/commit/6a7e493927736cebcaf5c1a84e69b8e6b7b744d8)
-- Only apps should have lockfiles [`d2bf6c4`](https://github.com/ljharb/set-function-length/commit/d2bf6c43de8a51b02a0aa53e8d62cb50c4a2b0da)
+v0.2.1 - Sun, 12 Jul 2015 16:04:58 GMT
+--------------------------------------
+
+
+
+
+
+v0.2.0 - Sun, 12 Jul 2015 16:01:47 GMT
+--------------------------------------
+
+
