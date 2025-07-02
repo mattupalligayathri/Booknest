@@ -2,18 +2,14 @@
 
 var implementation = require('./implementation');
 
-var zeroWidthSpace = '\u200b';
-var mongolianVowelSeparator = '\u180E';
-
 module.exports = function getPolyfill() {
-	if (
-		String.prototype.trim
-		&& zeroWidthSpace.trim() === zeroWidthSpace
-		&& mongolianVowelSeparator.trim() === mongolianVowelSeparator
-		&& ('_' + mongolianVowelSeparator).trim() === ('_' + mongolianVowelSeparator)
-		&& (mongolianVowelSeparator + '_').trim() === (mongolianVowelSeparator + '_')
-	) {
-		return String.prototype.trim;
+	if (!String.prototype.trimEnd && !String.prototype.trimRight) {
+		return implementation;
 	}
-	return implementation;
+	var zeroWidthSpace = '\u200b';
+	var trimmed = zeroWidthSpace.trimEnd ? zeroWidthSpace.trimEnd() : zeroWidthSpace.trimRight();
+	if (trimmed !== zeroWidthSpace) {
+		return implementation;
+	}
+	return String.prototype.trimEnd || String.prototype.trimRight;
 };
