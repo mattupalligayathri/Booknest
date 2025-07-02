@@ -1,758 +1,305 @@
-# Source Map JS
+# to-regex-range [![Donate](https://img.shields.io/badge/Donate-PayPal-green.svg)](https://www.paypal.com/cgi-bin/webscr?cmd=_s-xclick&hosted_button_id=W8YFZ425KND68) [![NPM version](https://img.shields.io/npm/v/to-regex-range.svg?style=flat)](https://www.npmjs.com/package/to-regex-range) [![NPM monthly downloads](https://img.shields.io/npm/dm/to-regex-range.svg?style=flat)](https://npmjs.org/package/to-regex-range) [![NPM total downloads](https://img.shields.io/npm/dt/to-regex-range.svg?style=flat)](https://npmjs.org/package/to-regex-range) [![Linux Build Status](https://img.shields.io/travis/micromatch/to-regex-range.svg?style=flat&label=Travis)](https://travis-ci.org/micromatch/to-regex-range)
 
-[![NPM](https://nodei.co/npm/source-map-js.png?downloads=true&downloadRank=true)](https://www.npmjs.com/package/source-map-js)
+> Pass two numbers, get a regex-compatible source string for matching ranges. Validated against more than 2.78 million test assertions.
 
-Difference between original [source-map](https://github.com/mozilla/source-map):
+Please consider following this project's author, [Jon Schlinkert](https://github.com/jonschlinkert), and consider starring the project to show your :heart: and support.
 
-> TL,DR: it's fork of original source-map@0.6, but with perfomance optimizations.
+## Install
 
-This journey starts from [source-map@0.7.0](https://github.com/mozilla/source-map/blob/master/CHANGELOG.md#070). Some part of it was rewritten to Rust and WASM and API became async.
+Install with [npm](https://www.npmjs.com/):
 
-It's still a major block for many libraries like PostCSS or Sass for example because they need to migrate the whole API to the async way. This is the reason why 0.6.1 has 2x more downloads than 0.7.3 while it's faster several times.
+```sh
+$ npm install --save to-regex-range
+```
 
-![Downloads count](media/downloads.png)
+<details>
+<summary><strong>What does this do?</strong></summary>
 
-More important that WASM version has some optimizations in JS code too. This is why [community asked to create branch for 0.6 version](https://github.com/mozilla/source-map/issues/324) and port these optimizations but, sadly, the answer was «no». A bit later I discovered [the issue](https://github.com/mozilla/source-map/issues/370) created by [Ben Rothman (@benthemonkey)](https://github.com/benthemonkey) with no response at all.
+<br>
 
-[Roman Dvornov (@lahmatiy)](https://github.com/lahmatiy) wrote a [serveral posts](https://t.me/gorshochekvarit/76) (russian, only, sorry) about source-map library in his own Telegram channel. He mentioned the article [«Maybe you don't need Rust and WASM to speed up your JS»](https://mrale.ph/blog/2018/02/03/maybe-you-dont-need-rust-to-speed-up-your-js.html) written by [Vyacheslav Egorov (@mraleph)](https://github.com/mraleph). This article contains optimizations and hacks that lead to almost the same performance compare to WASM implementation.
+This libary generates the `source` string to be passed to `new RegExp()` for matching a range of numbers.
 
-I decided to fork the original source-map and port these optimizations from the article and several others PR from the original source-map.
+**Example**
 
----------
+```js
+const toRegexRange = require('to-regex-range');
+const regex = new RegExp(toRegexRange('15', '95'));
+```
 
-This is a library to generate and consume the source map format
-[described here][format].
+A string is returned so that you can do whatever you need with it before passing it to `new RegExp()` (like adding `^` or `$` boundaries, defining flags, or combining it another string).
 
-[format]: https://docs.google.com/document/d/1U1RGAehQwRypUTovF1KRlpiOFze0b-_2gc6fAH0KY0k/edit
+<br>
 
-## Use with Node
+</details>
 
-    $ npm install source-map-js
+<details>
+<summary><strong>Why use this library?</strong></summary>
 
-<!-- ## Use on the Web
+<br>
 
-    <script src="https://raw.githubusercontent.com/mozilla/source-map/master/dist/source-map.min.js" defer></script> -->
+### Convenience
 
---------------------------------------------------------------------------------
+Creating regular expressions for matching numbers gets deceptively complicated pretty fast.
 
-<!-- `npm run toc` to regenerate the Table of Contents -->
+For example, let's say you need a validation regex for matching part of a user-id, postal code, social security number, tax id, etc:
 
-<!-- START doctoc generated TOC please keep comment here to allow auto update -->
-<!-- DON'T EDIT THIS SECTION, INSTEAD RE-RUN doctoc TO UPDATE -->
-## Table of Contents
+* regex for matching `1` => `/1/` (easy enough)
+* regex for matching `1` through `5` => `/[1-5]/` (not bad...)
+* regex for matching `1` or `5` => `/(1|5)/` (still easy...)
+* regex for matching `1` through `50` => `/([1-9]|[1-4][0-9]|50)/` (uh-oh...)
+* regex for matching `1` through `55` => `/([1-9]|[1-4][0-9]|5[0-5])/` (no prob, I can do this...)
+* regex for matching `1` through `555` => `/([1-9]|[1-9][0-9]|[1-4][0-9]{2}|5[0-4][0-9]|55[0-5])/` (maybe not...)
+* regex for matching `0001` through `5555` => `/(0{3}[1-9]|0{2}[1-9][0-9]|0[1-9][0-9]{2}|[1-4][0-9]{3}|5[0-4][0-9]{2}|55[0-4][0-9]|555[0-5])/` (okay, I get the point!)
 
-- [Examples](#examples)
-  - [Consuming a source map](#consuming-a-source-map)
-  - [Generating a source map](#generating-a-source-map)
-    - [With SourceNode (high level API)](#with-sourcenode-high-level-api)
-    - [With SourceMapGenerator (low level API)](#with-sourcemapgenerator-low-level-api)
-- [API](#api)
-  - [SourceMapConsumer](#sourcemapconsumer)
-    - [new SourceMapConsumer(rawSourceMap)](#new-sourcemapconsumerrawsourcemap)
-    - [SourceMapConsumer.prototype.computeColumnSpans()](#sourcemapconsumerprototypecomputecolumnspans)
-    - [SourceMapConsumer.prototype.originalPositionFor(generatedPosition)](#sourcemapconsumerprototypeoriginalpositionforgeneratedposition)
-    - [SourceMapConsumer.prototype.generatedPositionFor(originalPosition)](#sourcemapconsumerprototypegeneratedpositionfororiginalposition)
-    - [SourceMapConsumer.prototype.allGeneratedPositionsFor(originalPosition)](#sourcemapconsumerprototypeallgeneratedpositionsfororiginalposition)
-    - [SourceMapConsumer.prototype.hasContentsOfAllSources()](#sourcemapconsumerprototypehascontentsofallsources)
-    - [SourceMapConsumer.prototype.sourceContentFor(source[, returnNullOnMissing])](#sourcemapconsumerprototypesourcecontentforsource-returnnullonmissing)
-    - [SourceMapConsumer.prototype.eachMapping(callback, context, order)](#sourcemapconsumerprototypeeachmappingcallback-context-order)
-  - [SourceMapGenerator](#sourcemapgenerator)
-    - [new SourceMapGenerator([startOfSourceMap])](#new-sourcemapgeneratorstartofsourcemap)
-    - [SourceMapGenerator.fromSourceMap(sourceMapConsumer)](#sourcemapgeneratorfromsourcemapsourcemapconsumer)
-    - [SourceMapGenerator.prototype.addMapping(mapping)](#sourcemapgeneratorprototypeaddmappingmapping)
-    - [SourceMapGenerator.prototype.setSourceContent(sourceFile, sourceContent)](#sourcemapgeneratorprototypesetsourcecontentsourcefile-sourcecontent)
-    - [SourceMapGenerator.prototype.applySourceMap(sourceMapConsumer[, sourceFile[, sourceMapPath]])](#sourcemapgeneratorprototypeapplysourcemapsourcemapconsumer-sourcefile-sourcemappath)
-    - [SourceMapGenerator.prototype.toString()](#sourcemapgeneratorprototypetostring)
-  - [SourceNode](#sourcenode)
-    - [new SourceNode([line, column, source[, chunk[, name]]])](#new-sourcenodeline-column-source-chunk-name)
-    - [SourceNode.fromStringWithSourceMap(code, sourceMapConsumer[, relativePath])](#sourcenodefromstringwithsourcemapcode-sourcemapconsumer-relativepath)
-    - [SourceNode.prototype.add(chunk)](#sourcenodeprototypeaddchunk)
-    - [SourceNode.prototype.prepend(chunk)](#sourcenodeprototypeprependchunk)
-    - [SourceNode.prototype.setSourceContent(sourceFile, sourceContent)](#sourcenodeprototypesetsourcecontentsourcefile-sourcecontent)
-    - [SourceNode.prototype.walk(fn)](#sourcenodeprototypewalkfn)
-    - [SourceNode.prototype.walkSourceContents(fn)](#sourcenodeprototypewalksourcecontentsfn)
-    - [SourceNode.prototype.join(sep)](#sourcenodeprototypejoinsep)
-    - [SourceNode.prototype.replaceRight(pattern, replacement)](#sourcenodeprototypereplacerightpattern-replacement)
-    - [SourceNode.prototype.toString()](#sourcenodeprototypetostring)
-    - [SourceNode.prototype.toStringWithSourceMap([startOfSourceMap])](#sourcenodeprototypetostringwithsourcemapstartofsourcemap)
+The numbers are contrived, but they're also really basic. In the real world you might need to generate a regex on-the-fly for validation.
 
-<!-- END doctoc generated TOC please keep comment here to allow auto update -->
+**Learn more**
+
+If you're interested in learning more about [character classes](http://www.regular-expressions.info/charclass.html) and other regex features, I personally have always found [regular-expressions.info](http://www.regular-expressions.info/charclass.html) to be pretty useful.
+
+### Heavily tested
+
+As of April 07, 2019, this library runs [>1m test assertions](./test/test.js) against generated regex-ranges to provide brute-force verification that results are correct.
+
+Tests run in ~280ms on my MacBook Pro, 2.5 GHz Intel Core i7.
+
+### Optimized
+
+Generated regular expressions are optimized:
+
+* duplicate sequences and character classes are reduced using quantifiers
+* smart enough to use `?` conditionals when number(s) or range(s) can be positive or negative
+* uses fragment caching to avoid processing the same exact string more than once
+
+<br>
+
+</details>
+
+## Usage
+
+Add this library to your javascript application with the following line of code
+
+```js
+const toRegexRange = require('to-regex-range');
+```
+
+The main export is a function that takes two integers: the `min` value and `max` value (formatted as strings or numbers).
+
+```js
+const source = toRegexRange('15', '95');
+//=> 1[5-9]|[2-8][0-9]|9[0-5]
+
+const regex = new RegExp(`^${source}$`);
+console.log(regex.test('14')); //=> false
+console.log(regex.test('50')); //=> true
+console.log(regex.test('94')); //=> true
+console.log(regex.test('96')); //=> false
+```
+
+## Options
+
+### options.capture
+
+**Type**: `boolean`
+
+**Deafault**: `undefined`
+
+Wrap the returned value in parentheses when there is more than one regex condition. Useful when you're dynamically generating ranges.
+
+```js
+console.log(toRegexRange('-10', '10'));
+//=> -[1-9]|-?10|[0-9]
+
+console.log(toRegexRange('-10', '10', { capture: true }));
+//=> (-[1-9]|-?10|[0-9])
+```
+
+### options.shorthand
+
+**Type**: `boolean`
+
+**Deafault**: `undefined`
+
+Use the regex shorthand for `[0-9]`:
+
+```js
+console.log(toRegexRange('0', '999999'));
+//=> [0-9]|[1-9][0-9]{1,5}
+
+console.log(toRegexRange('0', '999999', { shorthand: true }));
+//=> \d|[1-9]\d{1,5}
+```
+
+### options.relaxZeros
+
+**Type**: `boolean`
+
+**Default**: `true`
+
+This option relaxes matching for leading zeros when when ranges are zero-padded.
+
+```js
+const source = toRegexRange('-0010', '0010');
+const regex = new RegExp(`^${source}$`);
+console.log(regex.test('-10')); //=> true
+console.log(regex.test('-010')); //=> true
+console.log(regex.test('-0010')); //=> true
+console.log(regex.test('10')); //=> true
+console.log(regex.test('010')); //=> true
+console.log(regex.test('0010')); //=> true
+```
+
+When `relaxZeros` is false, matching is strict:
+
+```js
+const source = toRegexRange('-0010', '0010', { relaxZeros: false });
+const regex = new RegExp(`^${source}$`);
+console.log(regex.test('-10')); //=> false
+console.log(regex.test('-010')); //=> false
+console.log(regex.test('-0010')); //=> true
+console.log(regex.test('10')); //=> false
+console.log(regex.test('010')); //=> false
+console.log(regex.test('0010')); //=> true
+```
 
 ## Examples
 
-### Consuming a source map
+| **Range**                   | **Result**                                                                      | **Compile time** |
+| ---                         | ---                                                                             | ---              |
+| `toRegexRange(-10, 10)`     | `-[1-9]\|-?10\|[0-9]`                                                           | _132μs_          |
+| `toRegexRange(-100, -10)`   | `-1[0-9]\|-[2-9][0-9]\|-100`                                                    | _50μs_           |
+| `toRegexRange(-100, 100)`   | `-[1-9]\|-?[1-9][0-9]\|-?100\|[0-9]`                                            | _42μs_           |
+| `toRegexRange(001, 100)`    | `0{0,2}[1-9]\|0?[1-9][0-9]\|100`                                                | _109μs_          |
+| `toRegexRange(001, 555)`    | `0{0,2}[1-9]\|0?[1-9][0-9]\|[1-4][0-9]{2}\|5[0-4][0-9]\|55[0-5]`                | _51μs_           |
+| `toRegexRange(0010, 1000)`  | `0{0,2}1[0-9]\|0{0,2}[2-9][0-9]\|0?[1-9][0-9]{2}\|1000`                         | _31μs_           |
+| `toRegexRange(1, 50)`       | `[1-9]\|[1-4][0-9]\|50`                                                         | _24μs_           |
+| `toRegexRange(1, 55)`       | `[1-9]\|[1-4][0-9]\|5[0-5]`                                                     | _23μs_           |
+| `toRegexRange(1, 555)`      | `[1-9]\|[1-9][0-9]\|[1-4][0-9]{2}\|5[0-4][0-9]\|55[0-5]`                        | _30μs_           |
+| `toRegexRange(1, 5555)`     | `[1-9]\|[1-9][0-9]{1,2}\|[1-4][0-9]{3}\|5[0-4][0-9]{2}\|55[0-4][0-9]\|555[0-5]` | _43μs_           |
+| `toRegexRange(111, 555)`    | `11[1-9]\|1[2-9][0-9]\|[2-4][0-9]{2}\|5[0-4][0-9]\|55[0-5]`                     | _38μs_           |
+| `toRegexRange(29, 51)`      | `29\|[34][0-9]\|5[01]`                                                          | _24μs_           |
+| `toRegexRange(31, 877)`     | `3[1-9]\|[4-9][0-9]\|[1-7][0-9]{2}\|8[0-6][0-9]\|87[0-7]`                       | _32μs_           |
+| `toRegexRange(5, 5)`        | `5`                                                                             | _8μs_            |
+| `toRegexRange(5, 6)`        | `5\|6`                                                                          | _11μs_           |
+| `toRegexRange(1, 2)`        | `1\|2`                                                                          | _6μs_            |
+| `toRegexRange(1, 5)`        | `[1-5]`                                                                         | _15μs_           |
+| `toRegexRange(1, 10)`       | `[1-9]\|10`                                                                     | _22μs_           |
+| `toRegexRange(1, 100)`      | `[1-9]\|[1-9][0-9]\|100`                                                        | _25μs_           |
+| `toRegexRange(1, 1000)`     | `[1-9]\|[1-9][0-9]{1,2}\|1000`                                                  | _31μs_           |
+| `toRegexRange(1, 10000)`    | `[1-9]\|[1-9][0-9]{1,3}\|10000`                                                 | _34μs_           |
+| `toRegexRange(1, 100000)`   | `[1-9]\|[1-9][0-9]{1,4}\|100000`                                                | _36μs_           |
+| `toRegexRange(1, 1000000)`  | `[1-9]\|[1-9][0-9]{1,5}\|1000000`                                               | _42μs_           |
+| `toRegexRange(1, 10000000)` | `[1-9]\|[1-9][0-9]{1,6}\|10000000`                                              | _42μs_           |
+
+## Heads up!
+
+**Order of arguments**
+
+When the `min` is larger than the `max`, values will be flipped to create a valid range:
 
 ```js
-var rawSourceMap = {
-  version: 3,
-  file: 'min.js',
-  names: ['bar', 'baz', 'n'],
-  sources: ['one.js', 'two.js'],
-  sourceRoot: 'http://example.com/www/js/',
-  mappings: 'CAAC,IAAI,IAAM,SAAUA,GAClB,OAAOC,IAAID;CCDb,IAAI,IAAM,SAAUE,GAClB,OAAOA'
-};
-
-var smc = new SourceMapConsumer(rawSourceMap);
-
-console.log(smc.sources);
-// [ 'http://example.com/www/js/one.js',
-//   'http://example.com/www/js/two.js' ]
-
-console.log(smc.originalPositionFor({
-  line: 2,
-  column: 28
-}));
-// { source: 'http://example.com/www/js/two.js',
-//   line: 2,
-//   column: 10,
-//   name: 'n' }
-
-console.log(smc.generatedPositionFor({
-  source: 'http://example.com/www/js/two.js',
-  line: 2,
-  column: 10
-}));
-// { line: 2, column: 28 }
-
-smc.eachMapping(function (m) {
-  // ...
-});
+toRegexRange('51', '29');
 ```
 
-### Generating a source map
-
-In depth guide:
-[**Compiling to JavaScript, and Debugging with Source Maps**](https://hacks.mozilla.org/2013/05/compiling-to-javascript-and-debugging-with-source-maps/)
-
-#### With SourceNode (high level API)
+Is effectively flipped to:
 
 ```js
-function compile(ast) {
-  switch (ast.type) {
-  case 'BinaryExpression':
-    return new SourceNode(
-      ast.location.line,
-      ast.location.column,
-      ast.location.source,
-      [compile(ast.left), " + ", compile(ast.right)]
-    );
-  case 'Literal':
-    return new SourceNode(
-      ast.location.line,
-      ast.location.column,
-      ast.location.source,
-      String(ast.value)
-    );
-  // ...
-  default:
-    throw new Error("Bad AST");
-  }
-}
-
-var ast = parse("40 + 2", "add.js");
-console.log(compile(ast).toStringWithSourceMap({
-  file: 'add.js'
-}));
-// { code: '40 + 2',
-//   map: [object SourceMapGenerator] }
+toRegexRange('29', '51');
+//=> 29|[3-4][0-9]|5[0-1]
 ```
 
-#### With SourceMapGenerator (low level API)
+**Steps / increments**
 
-```js
-var map = new SourceMapGenerator({
-  file: "source-mapped.js"
-});
+This library does not support steps (increments). A pr to add support would be welcome.
 
-map.addMapping({
-  generated: {
-    line: 10,
-    column: 35
-  },
-  source: "foo.js",
-  original: {
-    line: 33,
-    column: 2
-  },
-  name: "christopher"
-});
+## History
 
-console.log(map.toString());
-// '{"version":3,"file":"source-mapped.js","sources":["foo.js"],"names":["christopher"],"mappings":";;;;;;;;;mCAgCEA"}'
+### v2.0.0 - 2017-04-21
+
+**New features**
+
+Adds support for zero-padding!
+
+### v1.0.0
+
+**Optimizations**
+
+Repeating ranges are now grouped using quantifiers. rocessing time is roughly the same, but the generated regex is much smaller, which should result in faster matching.
+
+## Attribution
+
+Inspired by the python library [range-regex](https://github.com/dimka665/range-regex).
+
+## About
+
+<details>
+<summary><strong>Contributing</strong></summary>
+
+Pull requests and stars are always welcome. For bugs and feature requests, [please create an issue](../../issues/new).
+
+</details>
+
+<details>
+<summary><strong>Running Tests</strong></summary>
+
+Running and reviewing unit tests is a great way to get familiarized with a library and its API. You can install dependencies and run tests with the following command:
+
+```sh
+$ npm install && npm test
 ```
 
-## API
+</details>
 
-Get a reference to the module:
+<details>
+<summary><strong>Building docs</strong></summary>
 
-```js
-// Node.js
-var sourceMap = require('source-map');
+_(This project's readme.md is generated by [verb](https://github.com/verbose/verb-generate-readme), please don't edit the readme directly. Any changes to the readme must be made in the [.verb.md](.verb.md) readme template.)_
 
-// Browser builds
-var sourceMap = window.sourceMap;
+To generate the readme, run the following command:
 
-// Inside Firefox
-const sourceMap = require("devtools/toolkit/sourcemap/source-map.js");
+```sh
+$ npm install -g verbose/verb#dev verb-generate-readme && verb
 ```
 
-### SourceMapConsumer
+</details>
 
-A SourceMapConsumer instance represents a parsed source map which we can query
-for information about the original file positions by giving it a file position
-in the generated source.
+### Related projects
 
-#### new SourceMapConsumer(rawSourceMap)
+You might also be interested in these projects:
 
-The only parameter is the raw source map (either as a string which can be
-`JSON.parse`'d, or an object). According to the spec, source maps have the
-following attributes:
+* [expand-range](https://www.npmjs.com/package/expand-range): Fast, bash-like range expansion. Expand a range of numbers or letters, uppercase or lowercase. Used… [more](https://github.com/jonschlinkert/expand-range) | [homepage](https://github.com/jonschlinkert/expand-range "Fast, bash-like range expansion. Expand a range of numbers or letters, uppercase or lowercase. Used by micromatch.")
+* [fill-range](https://www.npmjs.com/package/fill-range): Fill in a range of numbers or letters, optionally passing an increment or `step` to… [more](https://github.com/jonschlinkert/fill-range) | [homepage](https://github.com/jonschlinkert/fill-range "Fill in a range of numbers or letters, optionally passing an increment or `step` to use, or create a regex-compatible range with `options.toRegex`")
+* [micromatch](https://www.npmjs.com/package/micromatch): Glob matching for javascript/node.js. A drop-in replacement and faster alternative to minimatch and multimatch. | [homepage](https://github.com/micromatch/micromatch "Glob matching for javascript/node.js. A drop-in replacement and faster alternative to minimatch and multimatch.")
+* [repeat-element](https://www.npmjs.com/package/repeat-element): Create an array by repeating the given value n times. | [homepage](https://github.com/jonschlinkert/repeat-element "Create an array by repeating the given value n times.")
+* [repeat-string](https://www.npmjs.com/package/repeat-string): Repeat the given string n times. Fastest implementation for repeating a string. | [homepage](https://github.com/jonschlinkert/repeat-string "Repeat the given string n times. Fastest implementation for repeating a string.")
 
-* `version`: Which version of the source map spec this map is following.
+### Contributors
 
-* `sources`: An array of URLs to the original source files.
+| **Commits** | **Contributor** |  
+| --- | --- |  
+| 63 | [jonschlinkert](https://github.com/jonschlinkert) |  
+| 3  | [doowb](https://github.com/doowb) |  
+| 2  | [realityking](https://github.com/realityking) |  
 
-* `names`: An array of identifiers which can be referenced by individual
-  mappings.
+### Author
 
-* `sourceRoot`: Optional. The URL root from which all sources are relative.
+**Jon Schlinkert**
 
-* `sourcesContent`: Optional. An array of contents of the original source files.
+* [GitHub Profile](https://github.com/jonschlinkert)
+* [Twitter Profile](https://twitter.com/jonschlinkert)
+* [LinkedIn Profile](https://linkedin.com/in/jonschlinkert)
 
-* `mappings`: A string of base64 VLQs which contain the actual mappings.
+Please consider supporting me on Patreon, or [start your own Patreon page](https://patreon.com/invite/bxpbvm)!
 
-* `file`: Optional. The generated filename this source map is associated with.
+<a href="https://www.patreon.com/jonschlinkert">
+<img src="https://c5.patreon.com/external/logo/become_a_patron_button@2x.png" height="50">
+</a>
 
-```js
-var consumer = new sourceMap.SourceMapConsumer(rawSourceMapJsonData);
-```
+### License
 
-#### SourceMapConsumer.prototype.computeColumnSpans()
+Copyright © 2019, [Jon Schlinkert](https://github.com/jonschlinkert).
+Released under the [MIT License](LICENSE).
 
-Compute the last column for each generated mapping. The last column is
-inclusive.
+***
 
-```js
-// Before:
-consumer.allGeneratedPositionsFor({ line: 2, source: "foo.coffee" })
-// [ { line: 2,
-//     column: 1 },
-//   { line: 2,
-//     column: 10 },
-//   { line: 2,
-//     column: 20 } ]
-
-consumer.computeColumnSpans();
-
-// After:
-consumer.allGeneratedPositionsFor({ line: 2, source: "foo.coffee" })
-// [ { line: 2,
-//     column: 1,
-//     lastColumn: 9 },
-//   { line: 2,
-//     column: 10,
-//     lastColumn: 19 },
-//   { line: 2,
-//     column: 20,
-//     lastColumn: Infinity } ]
-
-```
-
-#### SourceMapConsumer.prototype.originalPositionFor(generatedPosition)
-
-Returns the original source, line, and column information for the generated
-source's line and column positions provided. The only argument is an object with
-the following properties:
-
-* `line`: The line number in the generated source.  Line numbers in
-  this library are 1-based (note that the underlying source map
-  specification uses 0-based line numbers -- this library handles the
-  translation).
-
-* `column`: The column number in the generated source.  Column numbers
-  in this library are 0-based.
-
-* `bias`: Either `SourceMapConsumer.GREATEST_LOWER_BOUND` or
-  `SourceMapConsumer.LEAST_UPPER_BOUND`. Specifies whether to return the closest
-  element that is smaller than or greater than the one we are searching for,
-  respectively, if the exact element cannot be found.  Defaults to
-  `SourceMapConsumer.GREATEST_LOWER_BOUND`.
-
-and an object is returned with the following properties:
-
-* `source`: The original source file, or null if this information is not
-  available.
-
-* `line`: The line number in the original source, or null if this information is
-  not available.  The line number is 1-based.
-
-* `column`: The column number in the original source, or null if this
-  information is not available.  The column number is 0-based.
-
-* `name`: The original identifier, or null if this information is not available.
-
-```js
-consumer.originalPositionFor({ line: 2, column: 10 })
-// { source: 'foo.coffee',
-//   line: 2,
-//   column: 2,
-//   name: null }
-
-consumer.originalPositionFor({ line: 99999999999999999, column: 999999999999999 })
-// { source: null,
-//   line: null,
-//   column: null,
-//   name: null }
-```
-
-#### SourceMapConsumer.prototype.generatedPositionFor(originalPosition)
-
-Returns the generated line and column information for the original source,
-line, and column positions provided. The only argument is an object with
-the following properties:
-
-* `source`: The filename of the original source.
-
-* `line`: The line number in the original source.  The line number is
-  1-based.
-
-* `column`: The column number in the original source.  The column
-  number is 0-based.
-
-and an object is returned with the following properties:
-
-* `line`: The line number in the generated source, or null.  The line
-  number is 1-based.
-
-* `column`: The column number in the generated source, or null.  The
-  column number is 0-based.
-
-```js
-consumer.generatedPositionFor({ source: "example.js", line: 2, column: 10 })
-// { line: 1,
-//   column: 56 }
-```
-
-#### SourceMapConsumer.prototype.allGeneratedPositionsFor(originalPosition)
-
-Returns all generated line and column information for the original source, line,
-and column provided. If no column is provided, returns all mappings
-corresponding to a either the line we are searching for or the next closest line
-that has any mappings. Otherwise, returns all mappings corresponding to the
-given line and either the column we are searching for or the next closest column
-that has any offsets.
-
-The only argument is an object with the following properties:
-
-* `source`: The filename of the original source.
-
-* `line`: The line number in the original source.  The line number is
-  1-based.
-
-* `column`: Optional. The column number in the original source.  The
-  column number is 0-based.
-
-and an array of objects is returned, each with the following properties:
-
-* `line`: The line number in the generated source, or null.  The line
-  number is 1-based.
-
-* `column`: The column number in the generated source, or null.  The
-  column number is 0-based.
-
-```js
-consumer.allGeneratedpositionsfor({ line: 2, source: "foo.coffee" })
-// [ { line: 2,
-//     column: 1 },
-//   { line: 2,
-//     column: 10 },
-//   { line: 2,
-//     column: 20 } ]
-```
-
-#### SourceMapConsumer.prototype.hasContentsOfAllSources()
-
-Return true if we have the embedded source content for every source listed in
-the source map, false otherwise.
-
-In other words, if this method returns `true`, then
-`consumer.sourceContentFor(s)` will succeed for every source `s` in
-`consumer.sources`.
-
-```js
-// ...
-if (consumer.hasContentsOfAllSources()) {
-  consumerReadyCallback(consumer);
-} else {
-  fetchSources(consumer, consumerReadyCallback);
-}
-// ...
-```
-
-#### SourceMapConsumer.prototype.sourceContentFor(source[, returnNullOnMissing])
-
-Returns the original source content for the source provided. The only
-argument is the URL of the original source file.
-
-If the source content for the given source is not found, then an error is
-thrown. Optionally, pass `true` as the second param to have `null` returned
-instead.
-
-```js
-consumer.sources
-// [ "my-cool-lib.clj" ]
-
-consumer.sourceContentFor("my-cool-lib.clj")
-// "..."
-
-consumer.sourceContentFor("this is not in the source map");
-// Error: "this is not in the source map" is not in the source map
-
-consumer.sourceContentFor("this is not in the source map", true);
-// null
-```
-
-#### SourceMapConsumer.prototype.eachMapping(callback, context, order)
-
-Iterate over each mapping between an original source/line/column and a
-generated line/column in this source map.
-
-* `callback`: The function that is called with each mapping. Mappings have the
-  form `{ source, generatedLine, generatedColumn, originalLine, originalColumn,
-  name }`
-
-* `context`: Optional. If specified, this object will be the value of `this`
-  every time that `callback` is called.
-
-* `order`: Either `SourceMapConsumer.GENERATED_ORDER` or
-  `SourceMapConsumer.ORIGINAL_ORDER`. Specifies whether you want to iterate over
-  the mappings sorted by the generated file's line/column order or the
-  original's source/line/column order, respectively. Defaults to
-  `SourceMapConsumer.GENERATED_ORDER`.
-
-```js
-consumer.eachMapping(function (m) { console.log(m); })
-// ...
-// { source: 'illmatic.js',
-//   generatedLine: 1,
-//   generatedColumn: 0,
-//   originalLine: 1,
-//   originalColumn: 0,
-//   name: null }
-// { source: 'illmatic.js',
-//   generatedLine: 2,
-//   generatedColumn: 0,
-//   originalLine: 2,
-//   originalColumn: 0,
-//   name: null }
-// ...
-```
-### SourceMapGenerator
-
-An instance of the SourceMapGenerator represents a source map which is being
-built incrementally.
-
-#### new SourceMapGenerator([startOfSourceMap])
-
-You may pass an object with the following properties:
-
-* `file`: The filename of the generated source that this source map is
-  associated with.
-
-* `sourceRoot`: A root for all relative URLs in this source map.
-
-* `skipValidation`: Optional. When `true`, disables validation of mappings as
-  they are added. This can improve performance but should be used with
-  discretion, as a last resort. Even then, one should avoid using this flag when
-  running tests, if possible.
-
-```js
-var generator = new sourceMap.SourceMapGenerator({
-  file: "my-generated-javascript-file.js",
-  sourceRoot: "http://example.com/app/js/"
-});
-```
-
-#### SourceMapGenerator.fromSourceMap(sourceMapConsumer)
-
-Creates a new `SourceMapGenerator` from an existing `SourceMapConsumer` instance.
-
-* `sourceMapConsumer` The SourceMap.
-
-```js
-var generator = sourceMap.SourceMapGenerator.fromSourceMap(consumer);
-```
-
-#### SourceMapGenerator.prototype.addMapping(mapping)
-
-Add a single mapping from original source line and column to the generated
-source's line and column for this source map being created. The mapping object
-should have the following properties:
-
-* `generated`: An object with the generated line and column positions.
-
-* `original`: An object with the original line and column positions.
-
-* `source`: The original source file (relative to the sourceRoot).
-
-* `name`: An optional original token name for this mapping.
-
-```js
-generator.addMapping({
-  source: "module-one.scm",
-  original: { line: 128, column: 0 },
-  generated: { line: 3, column: 456 }
-})
-```
-
-#### SourceMapGenerator.prototype.setSourceContent(sourceFile, sourceContent)
-
-Set the source content for an original source file.
-
-* `sourceFile` the URL of the original source file.
-
-* `sourceContent` the content of the source file.
-
-```js
-generator.setSourceContent("module-one.scm",
-                           fs.readFileSync("path/to/module-one.scm"))
-```
-
-#### SourceMapGenerator.prototype.applySourceMap(sourceMapConsumer[, sourceFile[, sourceMapPath]])
-
-Applies a SourceMap for a source file to the SourceMap.
-Each mapping to the supplied source file is rewritten using the
-supplied SourceMap. Note: The resolution for the resulting mappings
-is the minimum of this map and the supplied map.
-
-* `sourceMapConsumer`: The SourceMap to be applied.
-
-* `sourceFile`: Optional. The filename of the source file.
-  If omitted, sourceMapConsumer.file will be used, if it exists.
-  Otherwise an error will be thrown.
-
-* `sourceMapPath`: Optional. The dirname of the path to the SourceMap
-  to be applied. If relative, it is relative to the SourceMap.
-
-  This parameter is needed when the two SourceMaps aren't in the same
-  directory, and the SourceMap to be applied contains relative source
-  paths. If so, those relative source paths need to be rewritten
-  relative to the SourceMap.
-
-  If omitted, it is assumed that both SourceMaps are in the same directory,
-  thus not needing any rewriting. (Supplying `'.'` has the same effect.)
-
-#### SourceMapGenerator.prototype.toString()
-
-Renders the source map being generated to a string.
-
-```js
-generator.toString()
-// '{"version":3,"sources":["module-one.scm"],"names":[],"mappings":"...snip...","file":"my-generated-javascript-file.js","sourceRoot":"http://example.com/app/js/"}'
-```
-
-### SourceNode
-
-SourceNodes provide a way to abstract over interpolating and/or concatenating
-snippets of generated JavaScript source code, while maintaining the line and
-column information associated between those snippets and the original source
-code. This is useful as the final intermediate representation a compiler might
-use before outputting the generated JS and source map.
-
-#### new SourceNode([line, column, source[, chunk[, name]]])
-
-* `line`: The original line number associated with this source node, or null if
-  it isn't associated with an original line.  The line number is 1-based.
-
-* `column`: The original column number associated with this source node, or null
-  if it isn't associated with an original column.  The column number
-  is 0-based.
-
-* `source`: The original source's filename; null if no filename is provided.
-
-* `chunk`: Optional. Is immediately passed to `SourceNode.prototype.add`, see
-  below.
-
-* `name`: Optional. The original identifier.
-
-```js
-var node = new SourceNode(1, 2, "a.cpp", [
-  new SourceNode(3, 4, "b.cpp", "extern int status;\n"),
-  new SourceNode(5, 6, "c.cpp", "std::string* make_string(size_t n);\n"),
-  new SourceNode(7, 8, "d.cpp", "int main(int argc, char** argv) {}\n"),
-]);
-```
-
-#### SourceNode.fromStringWithSourceMap(code, sourceMapConsumer[, relativePath])
-
-Creates a SourceNode from generated code and a SourceMapConsumer.
-
-* `code`: The generated code
-
-* `sourceMapConsumer` The SourceMap for the generated code
-
-* `relativePath` The optional path that relative sources in `sourceMapConsumer`
-  should be relative to.
-
-```js
-var consumer = new SourceMapConsumer(fs.readFileSync("path/to/my-file.js.map", "utf8"));
-var node = SourceNode.fromStringWithSourceMap(fs.readFileSync("path/to/my-file.js"),
-                                              consumer);
-```
-
-#### SourceNode.prototype.add(chunk)
-
-Add a chunk of generated JS to this source node.
-
-* `chunk`: A string snippet of generated JS code, another instance of
-   `SourceNode`, or an array where each member is one of those things.
-
-```js
-node.add(" + ");
-node.add(otherNode);
-node.add([leftHandOperandNode, " + ", rightHandOperandNode]);
-```
-
-#### SourceNode.prototype.prepend(chunk)
-
-Prepend a chunk of generated JS to this source node.
-
-* `chunk`: A string snippet of generated JS code, another instance of
-   `SourceNode`, or an array where each member is one of those things.
-
-```js
-node.prepend("/** Build Id: f783haef86324gf **/\n\n");
-```
-
-#### SourceNode.prototype.setSourceContent(sourceFile, sourceContent)
-
-Set the source content for a source file. This will be added to the
-`SourceMap` in the `sourcesContent` field.
-
-* `sourceFile`: The filename of the source file
-
-* `sourceContent`: The content of the source file
-
-```js
-node.setSourceContent("module-one.scm",
-                      fs.readFileSync("path/to/module-one.scm"))
-```
-
-#### SourceNode.prototype.walk(fn)
-
-Walk over the tree of JS snippets in this node and its children. The walking
-function is called once for each snippet of JS and is passed that snippet and
-the its original associated source's line/column location.
-
-* `fn`: The traversal function.
-
-```js
-var node = new SourceNode(1, 2, "a.js", [
-  new SourceNode(3, 4, "b.js", "uno"),
-  "dos",
-  [
-    "tres",
-    new SourceNode(5, 6, "c.js", "quatro")
-  ]
-]);
-
-node.walk(function (code, loc) { console.log("WALK:", code, loc); })
-// WALK: uno { source: 'b.js', line: 3, column: 4, name: null }
-// WALK: dos { source: 'a.js', line: 1, column: 2, name: null }
-// WALK: tres { source: 'a.js', line: 1, column: 2, name: null }
-// WALK: quatro { source: 'c.js', line: 5, column: 6, name: null }
-```
-
-#### SourceNode.prototype.walkSourceContents(fn)
-
-Walk over the tree of SourceNodes. The walking function is called for each
-source file content and is passed the filename and source content.
-
-* `fn`: The traversal function.
-
-```js
-var a = new SourceNode(1, 2, "a.js", "generated from a");
-a.setSourceContent("a.js", "original a");
-var b = new SourceNode(1, 2, "b.js", "generated from b");
-b.setSourceContent("b.js", "original b");
-var c = new SourceNode(1, 2, "c.js", "generated from c");
-c.setSourceContent("c.js", "original c");
-
-var node = new SourceNode(null, null, null, [a, b, c]);
-node.walkSourceContents(function (source, contents) { console.log("WALK:", source, ":", contents); })
-// WALK: a.js : original a
-// WALK: b.js : original b
-// WALK: c.js : original c
-```
-
-#### SourceNode.prototype.join(sep)
-
-Like `Array.prototype.join` except for SourceNodes. Inserts the separator
-between each of this source node's children.
-
-* `sep`: The separator.
-
-```js
-var lhs = new SourceNode(1, 2, "a.rs", "my_copy");
-var operand = new SourceNode(3, 4, "a.rs", "=");
-var rhs = new SourceNode(5, 6, "a.rs", "orig.clone()");
-
-var node = new SourceNode(null, null, null, [ lhs, operand, rhs ]);
-var joinedNode = node.join(" ");
-```
-
-#### SourceNode.prototype.replaceRight(pattern, replacement)
-
-Call `String.prototype.replace` on the very right-most source snippet. Useful
-for trimming white space from the end of a source node, etc.
-
-* `pattern`: The pattern to replace.
-
-* `replacement`: The thing to replace the pattern with.
-
-```js
-// Trim trailing white space.
-node.replaceRight(/\s*$/, "");
-```
-
-#### SourceNode.prototype.toString()
-
-Return the string representation of this source node. Walks over the tree and
-concatenates all the various snippets together to one string.
-
-```js
-var node = new SourceNode(1, 2, "a.js", [
-  new SourceNode(3, 4, "b.js", "uno"),
-  "dos",
-  [
-    "tres",
-    new SourceNode(5, 6, "c.js", "quatro")
-  ]
-]);
-
-node.toString()
-// 'unodostresquatro'
-```
-
-#### SourceNode.prototype.toStringWithSourceMap([startOfSourceMap])
-
-Returns the string representation of this tree of source nodes, plus a
-SourceMapGenerator which contains all the mappings between the generated and
-original sources.
-
-The arguments are the same as those to `new SourceMapGenerator`.
-
-```js
-var node = new SourceNode(1, 2, "a.js", [
-  new SourceNode(3, 4, "b.js", "uno"),
-  "dos",
-  [
-    "tres",
-    new SourceNode(5, 6, "c.js", "quatro")
-  ]
-]);
-
-node.toStringWithSourceMap({ file: "my-output-file.js" })
-// { code: 'unodostresquatro',
-//   map: [object SourceMapGenerator] }
-```
+_This file was generated by [verb-generate-readme](https://github.com/verbose/verb-generate-readme), v0.8.0, on April 07, 2019._
