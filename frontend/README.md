@@ -1,270 +1,146 @@
-<img src="https://raw.githubusercontent.com/react-icons/react-icons/master/react-icons.svg" width="120" alt="React Icons">
+# uncontrollable
 
-# [React Icons](https://react-icons.github.io/react-icons)
+Wrap a controlled react component, to allow specific prop/handler pairs to be omitted by Component consumers. Uncontrollable allows you to write React components, with minimal state, and then wrap them in a component that will manage state for prop/handlers if they are excluded.
 
-[![npm][npm-image]][npm-url]
+## Install
 
-[npm-image]: https://img.shields.io/npm/v/react-icons.svg?style=flat-square
-[npm-url]: https://www.npmjs.com/package/react-icons
-
-Include popular icons in your React projects easily with `react-icons`, which utilizes ES6 imports that allows you to include only the icons that your project is using.
-
-## Installation (for standard modern project)
-
-```bash
-yarn add react-icons
-# or
-npm install react-icons --save
+```sh
+npm i -S uncontrollable
 ```
 
-example usage
+### Usage
 
-```jsx
-import { FaBeer } from "react-icons/fa";
+If you are a bit unsure on the _why_ of this module read the next section first. If you just want to see some real-world examples, check out [React Widgets](https://github.com/jquense/react-widgets) which makes [heavy use of this strategy](https://github.com/jquense/react-widgets/blob/5d1b530cb094cdc72f577fe01abe4a02dd265400/src/Multiselect.jsx#L521).
 
-function Question() {
-  return (
-    <h3>
-      Lets go for a <FaBeer />?
-    </h3>
-  );
+```js
+import { uncontrollable } from 'uncontrollable'
+```
+
+### API
+
+#### `uncontrollable(Component, propHandlerHash, [methods])`
+
+- `Component`: is a valid react component, such as the result of `createClass`
+- `propHandlerHash`: define the pairs of prop/handlers you want to be uncontrollable, e.g. `{ value: 'onChange'}`
+- `methods`: since uncontrollable wraps your component in another component, methods are not immediately accessible. You can proxy them through by providing the names of the methods you want to continue to expose. **You don't need this if you are using React >= v16.3.0, the ref will automatically be forwarded to the uinderlying component**
+
+For every prop you indicate as uncontrollable, the returned component will also accept an initial, `default` value for that prop. For example, `open` can be left uncontrolled but the initial value can be set via `defaultOpen={true}` if we want it to start open.
+
+```js
+import { uncontrollable } from 'uncontrollable'
+
+const UncontrolledCombobox = uncontrollable(Combobox, {
+  value: 'onChange',
+  open: 'onToggle',
+  searchTerm: 'onSearch', //the current typed value (maybe it filters the dropdown list)
+})
+```
+
+Since uncontrollable creates a new component that wraps your existing one, methods on your underlying component
+won't be immediately accessible. In general this sort of access is not idiomatic React, but it does have its place.
+The third argument of `uncontrollable()` is an optional array of method names you want uncontrollable to "pass through"
+to the original component.
+
+```js
+let UncontrolledForm = uncontrollable(Form, { value: 'onChange' }, ['submit'])
+
+//when you use a ref this will work
+this.refs.myForm.submit()
+```
+
+#### `useUncontrolled(props, propsHandlerHash) => controlledProps`
+
+A React hook that can be used in place of the above Higher order Component. It
+returns a complete set of `props` which are safe to spread through to a child element.
+
+```js
+import { useUncontrolled } from 'uncontrollable'
+
+const UncontrolledCombobox = props => {
+  // filters out defaultValue, defaultOpen and returns controlled
+  // versions of onChange, and onToggle.
+  const controlledProps = useUncontrolled(props, {
+    value: 'onChange',
+    open: 'onToggle',
+  })
+
+  return <Checkbox {...controlledProps} />
 }
 ```
 
-[View the documentation](https://react-icons.github.io/react-icons) for further usage examples and how to use icons from other packages. _NOTE_: each Icon package has it's own subfolder under `react-icons` you import from.
+### Use Case
 
-For example, to use an icon from **Material Design**, your import would be: `import { ICON_NAME } from 'react-icons/md';`
-
-## Installation (for meteorjs, gatsbyjs, etc)
-
-> **Note**
-> This option has not had a new release for some time.
-> More info https://github.com/react-icons/react-icons/issues/593
-
-If your project grows in size, this option is available.
-This method has the trade-off that it takes a long time to install the package.
-
-```bash
-yarn add @react-icons/all-files
-# or
-npm install @react-icons/all-files --save
-```
-
-example usage
+One of the strengths of React is its extensibility model, enabled by a common practice of pushing component state as high up the tree as possible. While great for enabling extremely flexible and easy to reason about components, this can produce a lot of boilerplate to wire components up with every use. For simple components (like an input) this is usually a matter of tying the input `value` prop to a parent state property via its `onChange` handler. Here is an extremely common pattern:
 
 ```jsx
-import { FaBeer } from "@react-icons/all-files/fa/FaBeer";
+  render() {
+    return (
+      <input type='text'
+        value={this.state.value}
+        onChange={ e => this.setState({ value: e.target.value })}
+      />
+    )
+  }
+```
 
-function Question() {
-  return (
-    <h3>
-      Lets go for a <FaBeer />?
-    </h3>
-  );
+This pattern moves the responsibility of managing the `value` from the input to its parent and mimics "two-way" databinding. Sometimes, however, there is no need for the parent to manage the input's state directly. In that case, all we want to do is set the initial `value` of the input and let the input manage it from then on. React deals with this through "uncontrolled" inputs, where if you don't indicate that you want to control the state of the input externally via a `value` prop it will just do the book-keeping for you.
+
+This is a great pattern which we can make use of in our own Components. It is often best to build each component to be as stateless as possible, assuming that the parent will want to control everything that makes sense. Take a simple Dropdown component as an example
+
+```js
+class SimpleDropdown extends React.Component {
+  static propTypes = {
+    value: React.PropTypes.string,
+    onChange: React.PropTypes.func,
+    open: React.PropTypes.bool,
+    onToggle: React.PropTypes.func,
+  }
+
+  render() {
+    return (
+      <div>
+        <input
+          value={this.props.value}
+          onChange={e => this.props.onChange(e.target.value)}
+        />
+        <button onClick={e => this.props.onToggle(!this.props.open)}>
+          open
+        </button>
+        {this.props.open && (
+          <ul className="open">
+            <li>option 1</li>
+            <li>option 2</li>
+          </ul>
+        )}
+      </div>
+    )
+  }
 }
 ```
 
-## Icons
+Notice how we don't track any state in our simple dropdown? This is great because a consumer of our module will have the all the flexibility to decide what the behavior of the dropdown should be. Also notice our public API (propTypes), it consists of common pattern: a property we want set (`value`, `open`), and a set of handlers that indicate _when_ we want them set (`onChange`, `onToggle`). It is up to the parent component to change the `value` and `open` props in response to the handlers.
 
-| Icon Library                                                            | License                                                                                           | Version                                  | Count |
-| ----------------------------------------------------------------------- | ------------------------------------------------------------------------------------------------- | ---------------------------------------- | ----: |
-| [Circum Icons](https://circumicons.com/)                                | [MPL-2.0 license](https://github.com/Klarr-Agency/Circum-Icons/blob/main/LICENSE)                 | 1.0.0                                    |   288 |
-| [Font Awesome 5](https://fontawesome.com/)                              | [CC BY 4.0 License](https://creativecommons.org/licenses/by/4.0/)                                 | 5.15.4-3-gafecf2a                        |  1612 |
-| [Font Awesome 6](https://fontawesome.com/)                              | [CC BY 4.0 License](https://creativecommons.org/licenses/by/4.0/)                                 | 6.4.2                                    |  2025 |
-| [Ionicons 4](https://ionicons.com/)                                     | [MIT](https://github.com/ionic-team/ionicons/blob/master/LICENSE)                                 | 4.6.3                                    |   696 |
-| [Ionicons 5](https://ionicons.com/)                                     | [MIT](https://github.com/ionic-team/ionicons/blob/master/LICENSE)                                 | 5.5.4                                    |  1332 |
-| [Material Design icons](http://google.github.io/material-design-icons/) | [Apache License Version 2.0](https://github.com/google/material-design-icons/blob/master/LICENSE) | 4.0.0-90-g1ea21d5429                     |  4341 |
-| [Typicons](http://s-ings.com/typicons/)                                 | [CC BY-SA 3.0](https://creativecommons.org/licenses/by-sa/3.0/)                                   | 2.1.2                                    |   336 |
-| [Github Octicons icons](https://octicons.github.com/)                   | [MIT](https://github.com/primer/octicons/blob/master/LICENSE)                                     | 18.3.0                                   |   264 |
-| [Feather](https://feathericons.com/)                                    | [MIT](https://github.com/feathericons/feather/blob/master/LICENSE)                                | 4.29.1                                   |   287 |
-| [Lucide](https://lucide.dev/)                                           | [ISC](https://github.com/lucide-icons/lucide/blob/main/LICENSE)                                   | v4.11.0-15-g7493227d                     |  1215 |
-| [Game Icons](https://game-icons.net/)                                   | [CC BY 3.0](https://creativecommons.org/licenses/by/3.0/)                                         | 12920d6565588f0512542a3cb0cdfd36a497f910 |  4040 |
-| [Weather Icons](https://erikflowers.github.io/weather-icons/)           | [SIL OFL 1.1](http://scripts.sil.org/OFL)                                                         | 2.0.12                                   |   219 |
-| [Devicons](https://vorillaz.github.io/devicons/)                        | [MIT](https://opensource.org/licenses/MIT)                                                        | 1.8.0                                    |   192 |
-| [Ant Design Icons](https://github.com/ant-design/ant-design-icons)      | [MIT](https://opensource.org/licenses/MIT)                                                        | 4.3.1                                    |   789 |
-| [Bootstrap Icons](https://github.com/twbs/icons)                        | [MIT](https://opensource.org/licenses/MIT)                                                        | 1.11.1                                   |  2716 |
-| [Remix Icon](https://github.com/Remix-Design/RemixIcon)                 | [Apache License Version 2.0](http://www.apache.org/licenses/)                                     | 3.5.0                                    |  2537 |
-| [Flat Color Icons](https://github.com/icons8/flat-color-icons)          | [MIT](https://opensource.org/licenses/MIT)                                                        | 1.0.2                                    |   329 |
-| [Grommet-Icons](https://github.com/grommet/grommet-icons)               | [Apache License Version 2.0](http://www.apache.org/licenses/)                                     | 4.11.0                                   |   635 |
-| [Heroicons](https://github.com/tailwindlabs/heroicons)                  | [MIT](https://opensource.org/licenses/MIT)                                                        | 1.0.6                                    |   460 |
-| [Heroicons 2](https://github.com/tailwindlabs/heroicons)                | [MIT](https://opensource.org/licenses/MIT)                                                        | 2.0.18                                   |   876 |
-| [Simple Icons](https://simpleicons.org/)                                | [CC0 1.0 Universal](https://creativecommons.org/publicdomain/zero/1.0/)                           | 9.20.0                                   |  2753 |
-| [Simple Line Icons](https://thesabbir.github.io/simple-line-icons/)     | [MIT](https://opensource.org/licenses/MIT)                                                        | 2.5.5                                    |   189 |
-| [IcoMoon Free](https://github.com/Keyamoon/IcoMoon-Free)                | [CC BY 4.0 License](https://github.com/Keyamoon/IcoMoon-Free/blob/master/License.txt)             | d006795ede82361e1bac1ee76f215cf1dc51e4ca |   491 |
-| [BoxIcons](https://github.com/atisawd/boxicons)                         | [CC BY 4.0 License](https://github.com/atisawd/boxicons/blob/master/LICENSE)                      | 2.1.4                                    |  1634 |
-| [css.gg](https://github.com/astrit/css.gg)                              | [MIT](https://opensource.org/licenses/MIT)                                                        | 2.1.1                                    |   704 |
-| [VS Code Icons](https://github.com/microsoft/vscode-codicons)           | [CC BY 4.0](https://creativecommons.org/licenses/by/4.0/)                                         | 0.0.35                                   |   439 |
-| [Tabler Icons](https://github.com/tabler/tabler-icons)                  | [MIT](https://opensource.org/licenses/MIT)                                                        | 2.40.0                                   |  4836 |
-| [Themify Icons](https://github.com/lykmapipo/themify-icons)             | [MIT](https://github.com/thecreation/standard-icons/blob/master/modules/themify-icons/LICENSE)    | v0.1.2-2-g9600186                        |   352 |
-| [Radix Icons](https://icons.radix-ui.com)                               | [MIT](https://github.com/radix-ui/icons/blob/master/LICENSE)                                      | @radix-ui/react-icons@1.3.0-1-g94b3fcf   |   318 |
-| [Phosphor Icons](https://github.com/phosphor-icons/core)                | [MIT](https://github.com/phosphor-icons/core/blob/main/LICENSE)                                   | 2.0.2                                    |  7488 |
-| [Icons8 Line Awesome](https://icons8.com/line-awesome)                  | [MIT](https://github.com/icons8/line-awesome/blob/master/LICENSE.md)                              | 1.3.1                                    |  1544 |
+While this pattern offers an excellent amount of flexibility to consumers, it also requires them to write a bunch of boilerplate code that probably won't change much from use to use. In all likelihood they will always want to set `open` in response to `onToggle`, and only in rare cases will want to override that behavior. This is where the controlled/uncontrolled pattern comes in.
 
-You can add more icons by submitting pull requests or creating issues.
+We want to just handle the open/onToggle case ourselves if the consumer doesn't provide a `open` prop (indicating that they want to control it). Rather than complicating our dropdown component with all that logic, obscuring the business logic of our dropdown, we can add it later, by taking our dropdown and wrapping it inside another component that handles that for us.
 
-## Configuration
+`uncontrollable` allows you separate out the logic necessary to create controlled/uncontrolled inputs letting you focus on creating a completely controlled input and wrapping it later. This tends to be a lot simpler to reason about as well.
 
-You can configure react-icons props using [React Context API](https://reactjs.org/docs/context.html).
+```js
+  import { uncontrollable } from 'uncontrollable';
 
-_Requires **React 16.3** or higher._
+  const UncontrollableDropdown = uncontrollable(SimpleDropdown, {
+    value: 'onChange',
+    open: 'onToggle'
+  })
 
-```jsx
-import { IconContext } from "react-icons";
-
-<IconContext.Provider value={{ color: "blue", className: "global-class-name" }}>
-  <div>
-    <FaFolder />
-  </div>
-</IconContext.Provider>;
+  <UncontrollableDropdown
+    value={this.state.val} // we can still control these props if we want
+    onChange={val => this.setState({ val })}
+    defaultOpen={true} /> // or just let the UncontrollableDropdown handle it
+                          // and we just set an initial value (or leave it out completely)!
 ```
 
-| Key         | Default               | Notes                              |
-| ----------- | --------------------- | ---------------------------------- |
-| `color`     | `undefined` (inherit) |                                    |
-| `size`      | `1em`                 |                                    |
-| `className` | `undefined`           |                                    |
-| `style`     | `undefined`           | Can overwrite size and color       |
-| `attr`      | `undefined`           | Overwritten by other attributes    |
-| `title`     | `undefined`           | Icon description for accessibility |
+Now we don't need to worry about the open onToggle! The returned component will track `open` for us by assuming that it should just set `open` to whatever `onToggle` returns. If we _do_ want to worry about it we can just provide `open` and `onToggle` props and the uncontrolled input will just pass them through.
 
-## Migrating from version 2 -> 3
-
-### Change import style
-
-Import path has changed. You need to rewrite from the old style.
-
-```jsx
-// OLD IMPORT STYLE
-import FaBeer from "react-icons/lib/fa/beer";
-
-function Question() {
-  return (
-    <h3>
-      Lets go for a <FaBeer />?
-    </h3>
-  );
-}
-```
-
-```jsx
-// NEW IMPORT STYLE
-import { FaBeer } from "react-icons/fa";
-
-function Question() {
-  return (
-    <h3>
-      Lets go for a <FaBeer />?
-    </h3>
-  );
-}
-```
-
-Ending up with a large JS bundle? Check out [this issue](https://github.com/react-icons/react-icons/issues/154).
-
-### Adjustment CSS
-
-From version 3, `vertical-align: middle` is not automatically given. Please use IconContext to specify className or specify an inline style.
-
-#### Global Inline Styling
-
-```tsx
-<IconContext.Provider value={{ style: { verticalAlign: 'middle' } }}>
-```
-
-#### Global `className` Styling
-
-Component
-
-```tsx
-<IconContext.Provider value={{ className: 'react-icons' }}>
-```
-
-CSS
-
-```css
-.react-icons {
-  vertical-align: middle;
-}
-```
-
-### TypeScript native support
-
-Dependencies on `@types/react-icons` can be deleted.
-
-#### Yarn
-
-```bash
-yarn remove @types/react-icons
-```
-
-#### NPM
-
-```bash
-npm remove @types/react-icons
-```
-
-## Contributing
-
-`./build-script.sh` will build the whole project. See also CI scripts for more information.
-
-### Development
-
-```bash
-yarn
-cd packages/react-icons
-yarn fetch  # fetch icon sources
-yarn build
-```
-
-### Add/Update icon set
-
-First, check the discussion to see if anyone would like to add an icon set.
-
-https://github.com/react-icons/react-icons/discussions/categories/new-icon-set
-
-The SVG files to be fetched are managed in this file. Edit this file and run `yarn fetch && yarn check && yarn build`.
-
-https://github.com/react-icons/react-icons/blob/master/packages/react-icons/src/icons/index.ts
-
-### Preview
-
-> **Note**
-> The project is not actively accepting PR for the preview site at this time.
-
-The preview site is the [`react-icons`](https://react-icons.github.io/react-icons/) website, built in Astro+React.
-
-```bash
-cd packages/react-icons
-yarn fetch
-yarn build
-
-cd ../preview-astro
-yarn start
-```
-
-### Demo
-
-The demo is a [Create React App](https://create-react-app.dev/) boilerplate with `react-icons` added as a dependency for easy testing.
-
-```bash
-cd packages/react-icons
-yarn fetch
-yarn build
-
-cd ../demo
-yarn start
-```
-
-## Why React SVG components instead of fonts?
-
-SVG is [supported by all major browsers](http://caniuse.com/#search=svg). With `react-icons`, you can serve only the needed icons instead of one big font file to the users, helping you to recognize which icons are used in your project.
-
-## Related Projects
-
-- [react-svg-morph](https://github.com/gorangajic/react-svg-morph/)
-
-## Licence
-
-MIT
-
-- Icons are taken from the other projects so please check each project licences accordingly.
+The above is a contrived example but it allows you to wrap even more complex Components, giving you a lot of flexibility in the API you can offer a consumer of your Component. For every pair of prop/handlers you also get a defaultProp of the form "default[PropName]" so `value` -> `defaultValue`, and `open` -> `defaultOpen`, etc. [React Widgets](https://github.com/jquense/react-widgets) makes heavy use of this strategy, you can see it in action here: https://github.com/jquense/react-widgets/blob/5d1b530cb094cdc72f577fe01abe4a02dd265400/src/Multiselect.jsx#L521

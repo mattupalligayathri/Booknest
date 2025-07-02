@@ -1,12 +1,29 @@
-import _objectWithoutPropertiesLoose from "@babel/runtime/helpers/esm/objectWithoutPropertiesLoose";
-import _extends from "@babel/runtime/helpers/esm/extends";
-import _inheritsLoose from "@babel/runtime/helpers/esm/inheritsLoose";
+"use strict";
+
+var _interopRequireDefault = require("@babel/runtime/helpers/interopRequireDefault");
+
+var _interopRequireWildcard = require("@babel/runtime/helpers/interopRequireWildcard");
+
+exports.__esModule = true;
+exports.default = uncontrollable;
+
+var _objectWithoutPropertiesLoose2 = _interopRequireDefault(require("@babel/runtime/helpers/objectWithoutPropertiesLoose"));
+
+var _extends3 = _interopRequireDefault(require("@babel/runtime/helpers/extends"));
+
+var _inheritsLoose2 = _interopRequireDefault(require("@babel/runtime/helpers/inheritsLoose"));
+
+var _react = _interopRequireDefault(require("react"));
+
+var _reactLifecyclesCompat = require("react-lifecycles-compat");
+
+var _invariant = _interopRequireDefault(require("invariant"));
+
+var Utils = _interopRequireWildcard(require("./utils"));
+
 var _jsxFileName = "/Users/jquense/src/uncontrollable/src/uncontrollable.js";
-import React from 'react';
-import { polyfill } from 'react-lifecycles-compat';
-import invariant from 'invariant';
-import * as Utils from './utils';
-export default function uncontrollable(Component, controlledValues, methods) {
+
+function uncontrollable(Component, controlledValues, methods) {
   if (methods === void 0) {
     methods = [];
   }
@@ -15,12 +32,12 @@ export default function uncontrollable(Component, controlledValues, methods) {
   var canAcceptRef = Utils.canAcceptRef(Component);
   var controlledProps = Object.keys(controlledValues);
   var PROPS_TO_OMIT = controlledProps.map(Utils.defaultKey);
-  !(canAcceptRef || !methods.length) ? process.env.NODE_ENV !== "production" ? invariant(false, '[uncontrollable] stateless function components cannot pass through methods ' + 'because they have no associated instances. Check component: ' + displayName + ', ' + 'attempting to pass through methods: ' + methods.join(', ')) : invariant(false) : void 0;
+  !(canAcceptRef || !methods.length) ? process.env.NODE_ENV !== "production" ? (0, _invariant.default)(false, '[uncontrollable] stateless function components cannot pass through methods ' + 'because they have no associated instances. Check component: ' + displayName + ', ' + 'attempting to pass through methods: ' + methods.join(', ')) : invariant(false) : void 0;
 
   var UncontrolledComponent =
   /*#__PURE__*/
   function (_React$Component) {
-    _inheritsLoose(UncontrolledComponent, _React$Component);
+    (0, _inheritsLoose2.default)(UncontrolledComponent, _React$Component);
 
     function UncontrolledComponent() {
       var _this;
@@ -54,7 +71,7 @@ export default function uncontrollable(Component, controlledValues, methods) {
 
             var values = _ref.values;
             return {
-              values: _extends(Object.create(null), values, (_extends2 = {}, _extends2[propName] = value, _extends2))
+              values: (0, _extends3.default)(Object.create(null), values, (_extends2 = {}, _extends2[propName] = value, _extends2))
             };
           });
         };
@@ -86,7 +103,7 @@ export default function uncontrollable(Component, controlledValues, methods) {
       var values = _ref2.values,
           prevProps = _ref2.prevProps;
       var nextState = {
-        values: _extends(Object.create(null), values),
+        values: (0, _extends3.default)(Object.create(null), values),
         prevProps: {}
       };
       controlledProps.forEach(function (key) {
@@ -112,8 +129,7 @@ export default function uncontrollable(Component, controlledValues, methods) {
 
       var _this$props2 = this.props,
           innerRef = _this$props2.innerRef,
-          props = _objectWithoutPropertiesLoose(_this$props2, ["innerRef"]);
-
+          props = (0, _objectWithoutPropertiesLoose2.default)(_this$props2, ["innerRef"]);
       PROPS_TO_OMIT.forEach(function (prop) {
         delete props[prop];
       });
@@ -122,17 +138,17 @@ export default function uncontrollable(Component, controlledValues, methods) {
         var propValue = _this2.props[propName];
         newProps[propName] = propValue !== undefined ? propValue : _this2.state.values[propName];
       });
-      return React.createElement(Component, _extends({}, props, newProps, this.handlers, {
+      return _react.default.createElement(Component, (0, _extends3.default)({}, props, newProps, this.handlers, {
         ref: innerRef || this.attachRef
       }));
     };
 
     return UncontrolledComponent;
-  }(React.Component);
+  }(_react.default.Component);
 
-  polyfill(UncontrolledComponent);
+  (0, _reactLifecyclesCompat.polyfill)(UncontrolledComponent);
   UncontrolledComponent.displayName = "Uncontrolled(" + displayName + ")";
-  UncontrolledComponent.propTypes = _extends({
+  UncontrolledComponent.propTypes = (0, _extends3.default)({
     innerRef: function innerRef() {}
   }, Utils.uncontrolledPropTypes(controlledValues, displayName));
   methods.forEach(function (method) {
@@ -144,9 +160,9 @@ export default function uncontrollable(Component, controlledValues, methods) {
   });
   var WrappedComponent = UncontrolledComponent;
 
-  if (React.forwardRef) {
-    WrappedComponent = React.forwardRef(function (props, ref) {
-      return React.createElement(UncontrolledComponent, _extends({}, props, {
+  if (_react.default.forwardRef) {
+    WrappedComponent = _react.default.forwardRef(function (props, ref) {
+      return _react.default.createElement(UncontrolledComponent, (0, _extends3.default)({}, props, {
         innerRef: ref,
         __source: {
           fileName: _jsxFileName,
@@ -169,8 +185,10 @@ export default function uncontrollable(Component, controlledValues, methods) {
       additions = {};
     }
 
-    return uncontrollable(newComponent, _extends({}, controlledValues, additions), nextMethods);
+    return uncontrollable(newComponent, (0, _extends3.default)({}, controlledValues, additions), nextMethods);
   };
 
   return WrappedComponent;
 }
+
+module.exports = exports["default"];

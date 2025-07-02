@@ -6,7 +6,8 @@ Object.defineProperty(exports, "__esModule", {
 exports.default = _default;
 
 function _default(a, b) {
+  var d = new Date();
   return a = +a, b = +b, function (t) {
-    return a * (1 - t) + b * t;
+    return d.setTime(a * (1 - t) + b * t), d;
   };
 }
