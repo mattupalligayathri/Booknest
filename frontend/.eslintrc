@@ -3,10 +3,12 @@
 
 	"extends": "@ljharb",
 
-	"globals": {
-		"Uint8Array": false,
+	"env": {
+		"browser": true,
+		"node": true,
 	},
 
 	"rules": {
+		"id-length": "off",
 	},
 }

@@ -1,33 +1,37 @@
-# shebang-regex [![Build Status](https://travis-ci.org/sindresorhus/shebang-regex.svg?branch=master)](https://travis-ci.org/sindresorhus/shebang-regex)
+# to-fast-properties [![Build Status](https://travis-ci.org/sindresorhus/to-fast-properties.svg?branch=master)](https://travis-ci.org/sindresorhus/to-fast-properties)
 
-> Regular expression for matching a [shebang](https://en.wikipedia.org/wiki/Shebang_(Unix)) line
+> Force V8 to use fast properties for an object
+
+[Read more.](http://stackoverflow.com/questions/24987896/)
+
+Use `%HasFastProperties(object)` and `--allow-natives-syntax` to check whether an object already has fast properties.
 
 
 ## Install
 
 ```
-$ npm install shebang-regex
+$ npm install --save to-fast-properties
 ```
 
 
 ## Usage
 
 ```js
-const shebangRegex = require('shebang-regex');
+const toFastProperties = require('to-fast-properties');
 
-const string = '#!/usr/bin/env node\nconsole.log("unicorns");';
+const obj = {
+	foo: true,
+	bar: true
+};
 
-shebangRegex.test(string);
-//=> true
+delete obj.foo;
+// `obj` now has slow properties
 
-shebangRegex.exec(string)[0];
-//=> '#!/usr/bin/env node'
-
-shebangRegex.exec(string)[1];
-//=> '/usr/bin/env node'
+toFastProperties(obj);
+// `obj` now has fast properties
 ```
 
 
 ## License
 
-MIT © [Sindre Sorhus](https://sindresorhus.com)
+MIT © Petka Antonov, John-David Dalton, Sindre Sorhus

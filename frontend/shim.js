@@ -3,19 +3,12 @@
 var define = require('define-properties');
 var getPolyfill = require('./polyfill');
 
-module.exports = function shimGetPrototypeOf() {
-	define(
-		global,
-		{ Reflect: {} },
-		{ Reflect: function () { return typeof Reflect !== 'object' || !Reflect; } }
-	);
-
+module.exports = function shimStringTrim() {
 	var polyfill = getPolyfill();
-	define(
-		Reflect,
-		{ getPrototypeOf: polyfill },
-		{ getPrototypeOf: function () { return Reflect.getPrototypeOf !== polyfill; } }
-	);
-
+	define(String.prototype, { trim: polyfill }, {
+		trim: function testTrim() {
+			return String.prototype.trim !== polyfill;
+		}
+	});
 	return polyfill;
 };

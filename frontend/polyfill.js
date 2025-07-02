@@ -1,27 +1,19 @@
 'use strict';
 
-var Type = require('es-abstract/2023/Type');
-var GetIntrinsic = require('get-intrinsic');
-
-var $TypeError = GetIntrinsic('%TypeError%');
-
 var implementation = require('./implementation');
 
-var hasProto = [].__proto__ === Array.prototype; // eslint-disable-line no-proto
-
-var getProto = function getPrototypeOf(value) {
-	if (Type(value) !== 'Object') {
-		throw new $TypeError('Reflect.getPrototypeOf called on non-object');
-	}
-	return value.__proto__; // eslint-disable-line no-proto
-};
+var zeroWidthSpace = '\u200b';
+var mongolianVowelSeparator = '\u180E';
 
 module.exports = function getPolyfill() {
-	if (typeof Reflect === 'object' && Reflect && Reflect.getPrototypeOf) {
-		return Reflect.getPrototypeOf;
-	}
-	if (hasProto) {
-		return getProto;
+	if (
+		String.prototype.trim
+		&& zeroWidthSpace.trim() === zeroWidthSpace
+		&& mongolianVowelSeparator.trim() === mongolianVowelSeparator
+		&& ('_' + mongolianVowelSeparator).trim() === ('_' + mongolianVowelSeparator)
+		&& (mongolianVowelSeparator + '_').trim() === (mongolianVowelSeparator + '_')
+	) {
+		return String.prototype.trim;
 	}
 	return implementation;
 };
