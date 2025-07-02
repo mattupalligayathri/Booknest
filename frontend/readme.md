@@ -1,78 +1,46 @@
-# strip-json-comments [![Build Status](https://travis-ci.com/sindresorhus/strip-json-comments.svg?branch=master)](https://travis-ci.com/github/sindresorhus/strip-json-comments)
+# strip-ansi [![Build Status](https://travis-ci.org/chalk/strip-ansi.svg?branch=master)](https://travis-ci.org/chalk/strip-ansi)
 
-> Strip comments from JSON. Lets you use comments in your JSON files!
+> Strip [ANSI escape codes](https://en.wikipedia.org/wiki/ANSI_escape_code) from a string
 
-This is now possible:
-
-```js
-{
-	// Rainbows
-	"unicorn": /* ❤ */ "cake"
-}
-```
-
-It will replace single-line comments `//` and multi-line comments `/**/` with whitespace. This allows JSON error positions to remain as close as possible to the original source.
-
-Also available as a [Gulp](https://github.com/sindresorhus/gulp-strip-json-comments)/[Grunt](https://github.com/sindresorhus/grunt-strip-json-comments)/[Broccoli](https://github.com/sindresorhus/broccoli-strip-json-comments) plugin.
 
 ## Install
 
 ```
-$ npm install strip-json-comments
+$ npm install strip-ansi
 ```
+
 
 ## Usage
 
 ```js
-const json = `{
-	// Rainbows
-	"unicorn": /* ❤ */ "cake"
-}`;
+const stripAnsi = require('strip-ansi');
 
-JSON.parse(stripJsonComments(json));
-//=> {unicorn: 'cake'}
+stripAnsi('\u001B[4mUnicorn\u001B[0m');
+//=> 'Unicorn'
+
+stripAnsi('\u001B]8;;https://github.com\u0007Click\u001B]8;;\u0007');
+//=> 'Click'
 ```
 
-## API
 
-### stripJsonComments(jsonString, options?)
+## strip-ansi for enterprise
 
-#### jsonString
+Available as part of the Tidelift Subscription.
 
-Type: `string`
+The maintainers of strip-ansi and thousands of other packages are working with Tidelift to deliver commercial support and maintenance for the open source dependencies you use to build your applications. Save time, reduce risk, and improve code health, while paying the maintainers of the exact dependencies you use. [Learn more.](https://tidelift.com/subscription/pkg/npm-strip-ansi?utm_source=npm-strip-ansi&utm_medium=referral&utm_campaign=enterprise&utm_term=repo)
 
-Accepts a string with JSON and returns a string without comments.
-
-#### options
-
-Type: `object`
-
-##### whitespace
-
-Type: `boolean`\
-Default: `true`
-
-Replace comments with whitespace instead of stripping them entirely.
-
-## Benchmark
-
-```
-$ npm run bench
-```
 
 ## Related
 
-- [strip-json-comments-cli](https://github.com/sindresorhus/strip-json-comments-cli) - CLI for this module
-- [strip-css-comments](https://github.com/sindresorhus/strip-css-comments) - Strip comments from CSS
+- [strip-ansi-cli](https://github.com/chalk/strip-ansi-cli) - CLI for this module
+- [strip-ansi-stream](https://github.com/chalk/strip-ansi-stream) - Streaming version of this module
+- [has-ansi](https://github.com/chalk/has-ansi) - Check if a string has ANSI escape codes
+- [ansi-regex](https://github.com/chalk/ansi-regex) - Regular expression for matching ANSI escape codes
+- [chalk](https://github.com/chalk/chalk) - Terminal string styling done right
 
----
 
-<div align="center">
-	<b>
-		<a href="https://tidelift.com/subscription/pkg/npm-strip-json-comments?utm_source=npm-strip-json-comments&utm_medium=referral&utm_campaign=readme">Get professional support for this package with a Tidelift subscription</a>
-	</b>
-	<br>
-	<sub>
-		Tidelift helps make open source sustainable for maintainers while giving companies<br>assurances about security, maintenance, and licensing for their dependencies.
-	</sub>
-</div>
+## Maintainers
+
+- [Sindre Sorhus](https://github.com/sindresorhus)
+- [Josh Junon](https://github.com/qix-)
+

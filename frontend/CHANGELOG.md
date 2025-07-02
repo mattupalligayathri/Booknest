@@ -5,11 +5,37 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/)
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
-## v1.0.0 - 2022-09-22
+## [v1.1.1](https://github.com/ljharb/set-function-length/compare/v1.1.0...v1.1.1) - 2023-10-19
+
+### Fixed
+
+- [Fix] move `define-data-property` to runtime deps [`#2`](https://github.com/ljharb/set-function-length/issues/2)
 
 ### Commits
 
-- Initial implementation, tests, readme [`0273e9f`](https://github.com/ljharb/safe-regex-test/commit/0273e9f96f4b09df413523f4faacc8ae9ac5e6cb)
-- Initial commit [`b6c1edf`](https://github.com/ljharb/safe-regex-test/commit/b6c1edf740e6105fb71c34c1c69fadd837e8f7ab)
-- npm init [`c7f5765`](https://github.com/ljharb/safe-regex-test/commit/c7f576580607b16458b5a16e6bfa3b639e49c6bd)
-- Only apps should have lockfiles [`1162bf0`](https://github.com/ljharb/safe-regex-test/commit/1162bf011835040f7e2c9936734294b2d98536bf)
+- [Dev Deps] update `object-inspect`; add missing `call-bind` [`5aecf79`](https://github.com/ljharb/set-function-length/commit/5aecf79e7d6400957a5d9bd9ac20d4528908ca18)
+
+## [v1.1.0](https://github.com/ljharb/set-function-length/compare/v1.0.1...v1.1.0) - 2023-10-13
+
+### Commits
+
+- [New] add `env` entry point [`475c87a`](https://github.com/ljharb/set-function-length/commit/475c87aa2f59b700aaed589d980624ec596acdcb)
+- [Tests] add coverage with `nyc` [`14f0bf8`](https://github.com/ljharb/set-function-length/commit/14f0bf8c145ae60bf14a026420a06bb7be132c36)
+- [eslint] fix linting failure [`fb516f9`](https://github.com/ljharb/set-function-length/commit/fb516f93c664057138c53559ef63c8622a093335)
+- [Deps] update `define-data-property` [`d727e7c`](https://github.com/ljharb/set-function-length/commit/d727e7c6c9a40d7bf26797694e500ea68741feea)
+
+## [v1.0.1](https://github.com/ljharb/set-function-length/compare/v1.0.0...v1.0.1) - 2023-10-12
+
+### Commits
+
+- [Refactor] use `get-intrinsic`, since it‘s in the dep graph anyways [`278a954`](https://github.com/ljharb/set-function-length/commit/278a954a06cd849051c569ff7aee56df6798933e)
+- [meta] add `exports` [`72acfe5`](https://github.com/ljharb/set-function-length/commit/72acfe5a0310071fb205a72caba5ecbab24336a0)
+
+## v1.0.0 - 2023-10-12
+
+### Commits
+
+- Initial implementation, tests, readme [`fce14e1`](https://github.com/ljharb/set-function-length/commit/fce14e17586460e4f294405173be72b6ffdf7e5f)
+- Initial commit [`ca7ba85`](https://github.com/ljharb/set-function-length/commit/ca7ba857c7c283f9d26e21f14e71cd388f2cb722)
+- npm init [`6a7e493`](https://github.com/ljharb/set-function-length/commit/6a7e493927736cebcaf5c1a84e69b8e6b7b744d8)
+- Only apps should have lockfiles [`d2bf6c4`](https://github.com/ljharb/set-function-length/commit/d2bf6c43de8a51b02a0aa53e8d62cb50c4a2b0da)
